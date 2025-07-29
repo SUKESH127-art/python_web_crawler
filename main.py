@@ -1,17 +1,23 @@
 import os
 import time
-import typing
 from collections import defaultdict
 from typing import Literal, Optional
 from urllib.parse import urlparse
 
 import uvicorn
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import PlainTextResponse
 from firecrawl import FirecrawlApp
 from firecrawl.firecrawl import LocationConfig, ScrapeOptions
 from pydantic import BaseModel, HttpUrl, field_validator
+
+from helpers import (
+    build_scrape_options,
+    handle_crawl_exception,
+    validate_url_scheme,
+    write_output_to_file,
+)
 
 # load environment variable
 load_dotenv()
@@ -46,45 +52,6 @@ class CrawlRequest(BaseModel):
         return v
 
 
-def validate_url_scheme(url: str) -> bool:
-    """Validate that the URL uses a supported scheme."""
-    supported_schemes = {"http", "https"}
-    parsed = urlparse(url)
-    return parsed.scheme in supported_schemes
-
-
-def build_scrape_options(
-    max_age: int = 604800000,
-    proxy: Literal["basic", "stealth", "auto"] = "stealth",
-    country: str = "US",
-) -> ScrapeOptions:
-    return ScrapeOptions(
-        maxAge=max_age, proxy=proxy, location=LocationConfig(country=country)
-    )
-
-
-def handle_crawl_exception(e, target_url):
-    print(f"Error during Firecrawl API call for {target_url}: {e}")
-    if "timeout" in str(e).lower():
-        raise HTTPException(
-            status_code=408,
-            detail="Request timed out. The website may be too large or slow to respond.",
-        )
-    elif "rate limit" in str(e).lower() or "quota" in str(e).lower():
-        raise HTTPException(
-            status_code=429, detail="Rate limit exceeded. Please try again later."
-        )
-    elif "not found" in str(e).lower() or "404" in str(e):
-        raise HTTPException(
-            status_code=404, detail="Website not found or inaccessible."
-        )
-    else:
-        raise HTTPException(
-            status_code=502,
-            detail=f"An error occurred with the crawling service: {str(e)}",
-        )
-
-
 def perform_crawl(target_url: str, limit: int = 20):
     """
     Calls the Firecrawl API to crawl the site and returns the response.
@@ -106,13 +73,15 @@ def perform_crawl(target_url: str, limit: int = 20):
         if not crawl_response or not crawl_response.data:
             err = "No Response Found!" if not crawl_response else "No Data Found!"
             raise HTTPException(status_code=404, detail=err)
-        # Ensure we always pass a list to group_crawled_pages
         data = crawl_response.data
         if not data:
             return []
         if isinstance(data, list):
             return data
         return [data]
+    except HTTPException:
+        # Re-raise HTTPExceptions as-is
+        raise
     except Exception as e:
         handle_crawl_exception(e, target_url)
 
@@ -194,27 +163,6 @@ def format_groups_to_llmstxt(url_groups: dict):
     return result
 
 
-def write_output_to_file(
-    content: str, filename: str = "output_llm.txt", mode: str = "w"
-) -> bool:
-    """
-    Writes the given content to a local file. Returns True if successful, False otherwise.
-    """
-    try:
-        (
-            os.makedirs(os.path.dirname(filename), exist_ok=True)
-            if os.path.dirname(filename)
-            else None
-        )
-        with open(filename, mode, encoding="utf-8") as f:
-            f.write(content)
-        print(f"Successfully wrote output to {filename}")
-        return True
-    except IOError as e:
-        print(f"Error writing to file {filename}: {e}")
-        return False
-
-
 # Crawling logic
 @app.post("/generate-llms-txt")
 async def generate_llms_txt(request: CrawlRequest):
@@ -230,7 +178,8 @@ async def generate_llms_txt(request: CrawlRequest):
         # Step 1: Perform the crawl to get page data
         crawled_pages = perform_crawl(target_url, limit)
         if not isinstance(crawled_pages, list):
-            crawled_pages = [] if crawled_pages is None else [crawled_pages]
+            crawled_pages = [] if not crawled_pages else [crawled_pages]
+
         # Step 2: Group the results by URL path
         grouped_pages = group_crawled_pages(crawled_pages)
 
@@ -265,7 +214,6 @@ async def root():
         "version": "1.0.0",
         "endpoints": {
             "generate_llms_txt": "/generate-llms-txt (POST)",
-            "test_connection": "/test-connection (GET)",
             "docs": "/docs",
             "redoc": "/redoc",
         },
