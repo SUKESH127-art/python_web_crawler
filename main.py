@@ -1,7 +1,6 @@
 import os
-import time
 from collections import defaultdict
-from typing import Literal, Optional
+from typing import Optional
 from urllib.parse import urlparse
 
 import uvicorn
@@ -9,7 +8,6 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import PlainTextResponse
 from firecrawl import FirecrawlApp
-from firecrawl.firecrawl import LocationConfig, ScrapeOptions
 from pydantic import BaseModel, HttpUrl, field_validator
 
 from helpers import (
@@ -19,23 +17,18 @@ from helpers import (
     write_output_to_file,
 )
 
-# load environment variable
 load_dotenv()
 
-# Initialize fastapi
 app = FastAPI(
     title="LLMs.txt Generator API",
     description="An API to crawl a website and generate an llms.txt file.",
     version="1.0.0",
 )
 
-# Retrieve API key from environment variable
 firecrawl_api_key = os.getenv("FIRECRAWL_API_KEY")
 if not firecrawl_api_key:
     raise RuntimeError("Firecrawl's API key isn't found in .env file!")
 
-# Initialize the FirecrawlApp client once
-# This object will be reused for all incoming API requests.
 firecrawl_app = FirecrawlApp(api_key=firecrawl_api_key)
 
 
@@ -73,12 +66,8 @@ def perform_crawl(target_url: str, limit: int = 20):
         if not crawl_response or not crawl_response.data:
             err = "No Response Found!" if not crawl_response else "No Data Found!"
             raise HTTPException(status_code=404, detail=err)
-        data = crawl_response.data
-        if not data:
-            return []
-        if isinstance(data, list):
-            return data
-        return [data]
+        data = crawl_response.data or []  # Defaults to an empty list if data is None
+        return data if isinstance(data, list) else [data]
     except HTTPException:
         # Re-raise HTTPExceptions as-is
         raise
@@ -163,7 +152,6 @@ def format_groups_to_llmstxt(url_groups: dict):
     return result
 
 
-# Crawling logic
 @app.post("/generate-llms-txt")
 async def generate_llms_txt(request: CrawlRequest):
     """
@@ -204,6 +192,10 @@ async def generate_llms_txt(request: CrawlRequest):
         )
 
 
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
 @app.get("/")
 async def root():
     """
@@ -220,5 +212,17 @@ async def root():
     }
 
 
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+@app.get("/test-connection")
+async def test_connection():
+    """
+    Tests the Firecrawl API connection using a lightweight scrape call.
+    """
+    try:
+        print("Testing Firecrawl API connection...")
+        simple_url = "https://www.scrapethissite.com/pages/simple/"
+        firecrawl_app.scrape_url(simple_url)
+        return {"status": "success", "message": "Firecrawl API connection is valid."}
+    except Exception as e:
+        raise HTTPException(
+            status_code=502, detail=f"Firecrawl API connection failed: {str(e)}"
+        )
