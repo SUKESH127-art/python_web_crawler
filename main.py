@@ -34,7 +34,7 @@ firecrawl_app = FirecrawlApp(api_key=firecrawl_api_key)
 # Define pydantic request model with validation
 class CrawlRequest(BaseModel):
     url: HttpUrl
-    limit: Optional[int] = 100
+    limit: Optional[int] = 20
 
     @field_validator("limit")
     @classmethod
@@ -51,7 +51,7 @@ def validate_url_scheme(url: str) -> bool:
     return parsed.scheme in supported_schemes
 
 
-def perform_crawl(target_url: str, limit: int = 100):
+def perform_crawl(target_url: str, limit: int = 20):
     """
     Calls the Firecrawl API to crawl the site and returns the response.
     Handles initial validation and API-level errors.
@@ -63,7 +63,16 @@ def perform_crawl(target_url: str, limit: int = 100):
         )
 
     try:
-        crawl_response = firecrawl_app.crawl_url(url=target_url, limit=limit)
+        crawl_response = firecrawl_app.crawl_url(
+            url=target_url,
+            limit=limit,
+            max_concurrency=20,
+            crawl_options={
+                "maxAge": 604800000,  # 1 week cache
+                "proxy": "stealth",
+                "location": {"country": "US"},
+            },
+        )
         if not crawl_response or not crawl_response.data:
             err = "No Response Found!" if not crawl_response else "No Data Found!"
             raise HTTPException(status_code=404, detail=err)
@@ -98,43 +107,10 @@ def perform_crawl(target_url: str, limit: int = 100):
 
 def group_crawled_pages(pages: list):
     """
-    Takes a list of crawled page objects and groups them by their primary URL path. Also, filter out non-english pages.
+    Takes a list of crawled page objects and groups them by their primary URL path.
     """
     if not pages:
         raise HTTPException(status_code=404, detail="No pages were found to process")
-
-    NON_ENGLISH_CODES = {
-        "es",
-        "fr",
-        "de",
-        "ja",
-        "ko",
-        "ru",
-        "pt",
-        "it",
-        "zh-cn",
-        "zh-tw",
-        "id",
-        "ar",
-        "hi",
-        "bn",
-        "pa",
-        "ta",
-        "te",
-        "ur",
-        "vi",
-        "th",
-        "ms",
-        "ml",
-        "nl",
-        "pl",
-        "ro",
-        "sv",
-        "tr",
-        "uk",
-        "he",
-        "el",
-    }
 
     url_groups = defaultdict(list)
     processed_count = 0
@@ -147,10 +123,6 @@ def group_crawled_pages(pages: list):
         try:
             path = urlparse(page.metadata["sourceURL"]).path
             path_segments = [segment for segment in path.split("/") if segment]
-
-            if path_segments and path_segments[0] in NON_ENGLISH_CODES:
-                filtered_count += 1
-                continue
 
             group_key = (
                 "Homepage"
@@ -191,6 +163,8 @@ def format_groups_to_llmstxt(url_groups: dict):
         group_entries = []
         for page in pages:
             title = page.metadata.get("title", "No Title")
+            if not title:
+                title = group_name
             url = page.metadata.get("sourceURL")
             description = page.metadata.get("description")
 
@@ -229,7 +203,7 @@ async def generate_llms_txt(request: CrawlRequest):
     Accepts a URL, crawls the site using Firecrawl, and returns the crawled data.
     """
     target_url = str(request.url)  # Convert HttpUrl to string
-    limit = request.limit or 100
+    limit = request.limit or 20
 
     print(f"Starting crawl for: {target_url} with limit: {limit}")
 
