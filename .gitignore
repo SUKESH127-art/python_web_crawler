@@ -64,4 +64,4 @@ output/
 
 # Temporary files
 *.tmp
-*.temp 
+*.temp .env
