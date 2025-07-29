@@ -1,9 +1,33 @@
 import os
-from typing import Literal
+from typing import Literal, Optional, Dict, Any
 from urllib.parse import urlparse
 
+import requests
 from fastapi import HTTPException
 from firecrawl.firecrawl import LocationConfig, ScrapeOptions
+from rich.console import Console
+from rich.panel import Panel
+from rich.text import Text
+
+
+# Global console instance for UI components
+console = Console()
+
+
+def load_environment_config() -> str:
+    """Load and validate environment configuration."""
+    from dotenv import load_dotenv
+    load_dotenv()
+    
+    firecrawl_api_key = os.getenv("FIRECRAWL_API_KEY")
+    if not firecrawl_api_key:
+        raise RuntimeError("Firecrawl's API key isn't found in .env file!")
+    return firecrawl_api_key
+
+
+def get_base_url() -> str:
+    """Get the base URL for API requests."""
+    return os.getenv("BASE_URL", "http://127.0.0.1:8000")
 
 
 def validate_url_scheme(url: str) -> bool:
@@ -43,6 +67,67 @@ def handle_crawl_exception(e, target_url):
             status_code=502,
             detail=f"An error occurred with the crawling service: {str(e)}",
         )
+
+
+def create_error_panel(message: str, title: str = "Error") -> Panel:
+    """Create a standardized error panel."""
+    return Panel(
+        f"[bold red]{message}[/bold red]",
+        title=f"[bold red]{title}[/bold red]",
+        border_style="red",
+    )
+
+
+def create_success_panel(message: str, title: str = "Success") -> Panel:
+    """Create a standardized success panel."""
+    return Panel(
+        f"[bold green]{message}[/bold green]",
+        title=f"[bold green]{title}[/bold green]",
+        border_style="green",
+    )
+
+
+def create_info_panel(message: str, title: str = "Info") -> Panel:
+    """Create a standardized info panel."""
+    return Panel(
+        f"[bold cyan]{message}[/bold cyan]",
+        title=f"[bold yellow]{title}[/bold yellow]",
+        border_style="yellow",
+    )
+
+
+def handle_request_exception(e: requests.exceptions.RequestException, context: str = "API") -> None:
+    """Handle request exceptions with standardized error display."""
+    error_message = f"Error during {context.lower()}: {e}"
+    console.print(create_error_panel(error_message, f"{context} Error"))
+
+
+def extract_job_data(response: requests.Response) -> Optional[Dict[str, Any]]:
+    """Extract and validate job data from API response."""
+    try:
+        response.raise_for_status()
+        job_data = response.json()
+        job_id = job_data.get("job_id")
+        
+        if not job_id:
+            console.print(create_error_panel("No job_id returned from API."))
+            return None
+            
+        return job_data
+    except requests.exceptions.RequestException as e:
+        handle_request_exception(e, "Job Creation")
+        return None
+    except ValueError as e:
+        console.print(create_error_panel(f"Invalid JSON response: {e}"))
+        return None
+
+
+def build_status_url(base_url: str, job_data: Dict[str, Any]) -> str:
+    """Build the status URL for job polling."""
+    status_url = job_data.get("status_url", "")
+    if status_url.startswith("/"):
+        return f"{base_url}{status_url}"
+    return f"{base_url}/{status_url}"
 
 
 def write_output_to_file(

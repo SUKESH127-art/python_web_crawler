@@ -1,62 +1,58 @@
-import os
 import time
 
 import requests
-from rich.console import Console
-from rich.panel import Panel
 from rich.spinner import Spinner
 from rich.text import Text
 
-# --- Configuration ---
-BASE_URL = "http://127.0.0.1:8000"
-console = Console()
+from helpers import (
+    build_status_url,
+    console,
+    create_error_panel,
+    create_info_panel,
+    create_success_panel,
+    extract_job_data,
+    get_base_url,
+    handle_request_exception,
+)
 
 
 def run_job(url: str):
     """Starts a crawl job and polls for the result."""
+    base_url = get_base_url()
+    
     console.print(
-        Panel(
-            f"[bold cyan]🚀 Starting crawl for:[/bold cyan] {url}",
-            title="[bold green]Step 1: Initiate Crawl[/bold green]",
-            border_style="green",
+        create_info_panel(
+            f"🚀 Starting crawl for: {url}",
+            "Step 1: Initiate Crawl"
         )
     )
 
     # --- Start the Crawl Job ---
     try:
         response = requests.post(
-            f"{BASE_URL}/generate-llms-txt",
+            f"{base_url}/generate-llms-txt",
             json={"url": url},
             timeout=10,  # Timeout for the initial request
         )
-        response.raise_for_status()  # Raises an exception for 4xx/5xx errors
-        job_data = response.json()
-        job_id = job_data.get("job_id")
-
-        if not job_id:
-            console.print("[bold red]Error: No job_id returned from API.[/bold red]")
+        
+        job_data = extract_job_data(response)
+        if not job_data:
             return
 
+        job_id = job_data.get("job_id")
         console.print(
             f"[green]✔[/green] Job started successfully! [bold]job_id:[/bold] {job_id}"
         )
     except requests.exceptions.RequestException as e:
-        console.print(
-            Panel(
-                f"[bold red]Error starting job:[/bold red] {e}",
-                title="[bold red]API Error[/bold red]",
-                border_style="red",
-            )
-        )
+        handle_request_exception(e, "Job Creation")
         return
 
     # --- Poll for the Result ---
-    status_url = f"{BASE_URL}{job_data['status_url']}"
+    status_url = build_status_url(base_url, job_data)
     console.print(
-        Panel(
+        create_info_panel(
             f"Polling status at: {status_url}",
-            title="[bold yellow]Step 2: Check Status[/bold yellow]",
-            border_style="yellow",
+            "Step 2: Check Status"
         )
     )
 
@@ -80,23 +76,15 @@ def run_job(url: str):
                 # If we reach here, the job is done (status 200)
                 console.print("[green]✔[/green] Crawl completed!")
                 console.print(
-                    Panel(
+                    create_success_panel(
                         poll_response.text,
-                        title=f"[bold green]Final llms.txt for {url}[/bold green]",
-                        border_style="green",
-                        expand=True,
+                        f"Final llms.txt for {url}"
                     )
                 )
                 break
 
             except requests.exceptions.RequestException as e:
-                console.print(
-                    Panel(
-                        f"[bold red]Error polling for status:[/bold red] {e}",
-                        title="[bold red]API Error[/bold red]",
-                        border_style="red",
-                    )
-                )
+                handle_request_exception(e, "Status Polling")
                 break
 
 

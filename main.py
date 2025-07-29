@@ -1,10 +1,8 @@
-import os
 from collections import defaultdict
 from typing import Optional
 from urllib.parse import urlparse
 
 import uvicorn
-from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import PlainTextResponse
 from firecrawl import FirecrawlApp
@@ -13,11 +11,10 @@ from pydantic import BaseModel, HttpUrl, field_validator
 from helpers import (
     build_scrape_options,
     handle_crawl_exception,
+    load_environment_config,
     validate_url_scheme,
     write_output_to_file,
 )
-
-load_dotenv()
 
 app = FastAPI(
     title="LLMs.txt Generator API",
@@ -25,10 +22,8 @@ app = FastAPI(
     version="1.0.0",
 )
 
-firecrawl_api_key = os.getenv("FIRECRAWL_API_KEY")
-if not firecrawl_api_key:
-    raise RuntimeError("Firecrawl's API key isn't found in .env file!")
-
+# Initialize Firecrawl with API key from environment
+firecrawl_api_key = load_environment_config()
 firecrawl_app = FirecrawlApp(api_key=firecrawl_api_key)
 
 
