@@ -1,11 +1,11 @@
 import os
-import time
-from socket import timeout
+from collections import defaultdict
+from urllib.parse import urlparse
 
 import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import HTMLResponse, PlainTextResponse, StreamingResponse
+from fastapi.responses import PlainTextResponse
 from firecrawl import FirecrawlApp
 from pydantic import BaseModel, HttpUrl
 
@@ -34,43 +34,152 @@ class CrawlRequest(BaseModel):
     url: HttpUrl
 
 
+def perform_crawl(target_url: str, limit: int = 100):
+    """
+    Calls the Firecrawl API to crawl the site and returns the response.
+    Handles initial validation and API-level errors.
+    """
+    try:
+        crawl_response = firecrawl_app.crawl_url(url=target_url, limit=limit)
+        if not crawl_response or not crawl_response.data:
+            err = "No Response Found!" if not crawl_response else "No Data Found!"
+            raise HTTPException(status_code=404, detail=err)
+        return crawl_response.data
+    except Exception as e:
+        # Re-raise as an HTTPException to be caught by the main endpoint
+        raise HTTPException(
+            status_code=502,
+            detail=f"An error occurred with the crawling service: {str(e)}",
+        )
+
+
+def group_crawled_pages(pages: list):
+    """
+    Takes a list of crawled page objects and groups them by their primary URL path. Also, filter out non-english pages.
+    """
+    NON_ENGLISH_CODES = {
+        "es",
+        "fr",
+        "de",
+        "ja",
+        "ko",
+        "ru",
+        "pt",
+        "it",
+        "zh-cn",
+        "zh-tw",
+        "id",
+        "ar",
+        "hi",
+        "bn",
+        "pa",
+        "ta",
+        "te",
+        "ur",
+        "vi",
+        "th",
+        "ms",
+        "ml",
+        "nl",
+        "pl",
+        "ro",
+        "sv",
+        "tr",
+        "uk",
+        "he",
+        "el",
+    }
+
+    url_groups = defaultdict(list)
+
+    for page in pages:
+        if not page.metadata or not page.metadata.get("sourceURL"):
+            continue
+        try:
+            path = urlparse(page.metadata["sourceURL"]).path
+            path_segments = [segment for segment in path.split("/") if segment]
+
+            if path_segments and path_segments[0] in NON_ENGLISH_CODES:
+                continue
+
+            group_key = (
+                "Homepage"
+                if not path_segments
+                else path_segments[0].replace("-", " ").title()
+            )
+            url_groups[group_key].append(page)
+        except Exception as e:
+            print(
+                f"Could not parse or group URL {page.metadata.get('sourceURL', 'N/A')}: {e}"
+            )
+            continue
+
+    return url_groups
+
+
+def format_groups_to_llmstxt(url_groups: dict):
+    """
+    Takes a dictionary of grouped pages and formats it into a structured llms.txt string.
+    """
+    final_output_parts = []
+    for group_name, pages in sorted(url_groups.items()):
+        final_output_parts.append(f"## {group_name}")
+        group_entries = []
+        for page in pages:
+            title = page.metadata.get("title", "No Title")
+            url = page.metadata.get("sourceURL")
+            description = page.metadata.get("description")
+
+            entry = f"- [{title}]({url})"
+            if description:
+                entry += f": {description}"
+            group_entries.append(entry)
+
+        final_output_parts.append("\n".join(group_entries))
+    return "\n\n".join(final_output_parts)
+
+
+def write_output_to_file(content: str, filename: str = "output_llm.txt"):
+    """
+    Writes the given content to a local file.
+    """
+    try:
+        with open(filename, "w", encoding="utf-8") as f:
+            f.write(content)
+        print(f"Successfully wrote output to {filename}")
+    except IOError as e:
+        # Log the error but don't crash the request. The primary goal is to
+        # return the data to the user.
+        print(f"Error writing to file {filename}: {e}")
+
+
 # Crawling logic
 @app.post("/generate-llms-txt")
 async def generate_llms_txt(request: CrawlRequest):
     """
     Accepts a URL, crawls the site using Firecrawl, and returns the crawled data.
     """
-
-    # Stream the llmstxt content to both the client and write to output_llm.txt
-    def llmstxt_streamer(llmstxt):
-        # Ensure output_llm.txt is cleared before writing new content
-        with open("output_llm.txt", "w", encoding="utf-8") as f:
-            pass  # This will truncate the file to zero length
-        # Write to file as we stream
-        with open("output_llm.txt", "a", encoding="utf-8") as f:
-            for chunk in llmstxt.splitlines(keepends=True):
-                f.write(chunk)
-                yield chunk
-
     target_url = str(request.url)  # Convert HttpUrl to string
     print(f"Starting crawl for: {target_url}")
 
     try:
-        llm_text_response = firecrawl_app.generate_llms_text(
-            url=target_url, cache=True, max_urls=100
-        )
-        if (
-            not llm_text_response
-            or not llm_text_response.success
-            or not llm_text_response.data
-            or not llm_text_response.data.llmstxt
-        ):
-            err = "No Response Found!" if not llm_text_response else "No Data Found!"
-            raise HTTPException(status_code=404, detail=err)
+        # Step 1: Perform the crawl to get page data
+        crawled_pages = perform_crawl(target_url)
 
-        return StreamingResponse(
-            llmstxt_streamer(llm_text_response.data.llmstxt), media_type="text/plain"
-        )
+        # Step 2: Group the results by URL path
+        grouped_pages = group_crawled_pages(crawled_pages)
+
+        # Step 3: Format the groups into the final llms.txt string
+        final_output = format_groups_to_llmstxt(grouped_pages)
+
+        # Step 4: Write the output to a file
+        write_output_to_file(final_output)
+
+        return PlainTextResponse(content=final_output)
+
+    except HTTPException as e:
+        # If an HTTPException was raised in the helpers, re-raise it
+        raise e
 
     except Exception as e:
         print(f"Error while crawling {target_url}: {e}")
@@ -105,7 +214,7 @@ async def test_connection():
         # Try a simple API call to test the connection
         print("Testing Firecrawl API connection...")
         simple_url = "https://www.scrapethissite.com/pages/simple/"
-        firecrawl_app.crawl_url(simple_url)
+        firecrawl_app.scrape_url(simple_url)
         # You might need to check what methods are available for testing
         return {
             "status": "success",
