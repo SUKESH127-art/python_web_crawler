@@ -1,16 +1,16 @@
 ## Albums
 
-- [No Title](https://jsonplaceholder.typicode.com/albums)
 - [No Title](https://jsonplaceholder.typicode.com/albums/1/photos)
+- [No Title](https://jsonplaceholder.typicode.com/albums)
 
 ## Comments
 
-- [No Title](https://jsonplaceholder.typicode.com/comments)
 - [No Title](https://jsonplaceholder.typicode.com/comments?postId=1)
+- [No Title](https://jsonplaceholder.typicode.com/comments)
 
 ## Guide
 
-- [JSONPlaceholder - Guide](https://jsonplaceholder.typicode.com/guide)
+- [JSONPlaceholder - Guide](https://jsonplaceholder.typicode.com/guide/)
 
 ## Homepage
 
@@ -28,12 +28,12 @@
 
 ## Todos
 
-- [No Title](https://jsonplaceholder.typicode.com/todos/1)
 - [No Title](https://jsonplaceholder.typicode.com/todos)
+- [No Title](https://jsonplaceholder.typicode.com/todos/1)
 
 ## Users
 
+- [No Title](https://jsonplaceholder.typicode.com/users/1/posts)
+- [No Title](https://jsonplaceholder.typicode.com/users/1/todos)
 - [No Title](https://jsonplaceholder.typicode.com/users)
 - [No Title](https://jsonplaceholder.typicode.com/users/1/albums)
-- [No Title](https://jsonplaceholder.typicode.com/users/1/todos)
-- [No Title](https://jsonplaceholder.typicode.com/users/1/posts)
