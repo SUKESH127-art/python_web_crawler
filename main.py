@@ -5,7 +5,7 @@ from socket import timeout
 import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import HTMLResponse, PlainTextResponse, StreamingResponse
 from firecrawl import FirecrawlApp
 from pydantic import BaseModel, HttpUrl
 
@@ -29,7 +29,7 @@ if not firecrawl_api_key:
 firecrawl_app = FirecrawlApp(api_key=firecrawl_api_key)
 
 
-# Define request model
+# Define pydantic request model
 class CrawlRequest(BaseModel):
     url: HttpUrl
 
@@ -40,38 +40,40 @@ async def generate_llms_txt(request: CrawlRequest):
     """
     Accepts a URL, crawls the site using Firecrawl, and returns the crawled data.
     """
+
+    # Stream the llmstxt content to both the client and write to output_llm.txt
+    def llmstxt_streamer(llmstxt):
+        # Ensure output_llm.txt is cleared before writing new content
+        with open("output_llm.txt", "w", encoding="utf-8") as f:
+            pass  # This will truncate the file to zero length
+        # Write to file as we stream
+        with open("output_llm.txt", "a", encoding="utf-8") as f:
+            for chunk in llmstxt.splitlines(keepends=True):
+                f.write(chunk)
+                yield chunk
+
     target_url = str(request.url)  # Convert HttpUrl to string
     print(f"Starting crawl for: {target_url}")
+
     try:
-        crawl_response = firecrawl_app.crawl_url(url=target_url, limit=20)
-        if not crawl_response or not crawl_response.data:
-            err = "No Response Found!" if not crawl_response else "No Data Found!"
+        llm_text_response = firecrawl_app.generate_llms_text(
+            url=target_url, cache=True, max_urls=100
+        )
+        if (
+            not llm_text_response
+            or not llm_text_response.success
+            or not llm_text_response.data
+            or not llm_text_response.data.llmstxt
+        ):
+            err = "No Response Found!" if not llm_text_response else "No Data Found!"
             raise HTTPException(status_code=404, detail=err)
 
-        # llms.txt formatting logic
-        llms_txt_content = []
-        for page in crawl_response.data:
-            print("Page metadata:", page.metadata)
-            # ensure metadata exists and has required url
-            if not page.metadata or not page.metadata.get("sourceURL"):
-                continue
-            entry = [f"url: {page.metadata['sourceURL']}"]
-            # safely get title and description
-            title = page.metadata.get("title")
-            if title:
-                entry.append(f"title: {title}")
-            description = page.metadata.get("description")
-            if description:
-                entry.append(f"description: {description}")
-            llms_txt_content.append("\n".join(entry))
-        # Join all entries with a double newline
-        final_output = "\n\n".join(llms_txt_content)
-        print("Crawl response data:", crawl_response.data)
-        return PlainTextResponse(content=final_output)
+        return StreamingResponse(
+            llmstxt_streamer(llm_text_response.data.llmstxt), media_type="text/plain"
+        )
 
     except Exception as e:
         print(f"Error while crawling {target_url}: {e}")
-        # Return error as plain text for consistency
         return PlainTextResponse(
             content=f"An error occurred: {str(e)}", status_code=502
         )

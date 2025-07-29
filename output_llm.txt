@@ -1,0 +1,102 @@
+# https://docs.anthropic.com/ llms.txt
+
+- [Anthropic Documentation](https://docs.anthropic.com/en/home): Explore Anthropic's API, Claude Code, and resources.
+- [Hal the Humorous Helper](https://docs.anthropic.com/en/resources/prompt-library/hal-the-humorous-helper): Engage with Hal, a witty AI assistant for fun advice.
+- [Identity and Access Management](https://docs.anthropic.com/de/docs/claude-code/iam): Guide for setting up identity and access management in Claude Code.
+- [Claude Code SDK](https://docs.anthropic.com/en/docs/claude-code/sdk): Explore the Claude Code SDK for AI coding tools.
+- [Claude Code Setup](https://docs.anthropic.com/pt/docs/claude-code/amazon-bedrock): Guide to setting up Claude Code with Amazon Bedrock.
+- [Model Context Protocol](https://docs.anthropic.com/ru/docs/claude-code/mcp): Explore the Model Context Protocol for integrating external tools with LLMs.
+- [Storytelling Sidekick](https://docs.anthropic.com/en/resources/prompt-library/storytelling-sidekick): Collaborate to create engaging stories with dynamic characters.
+- [Claude Code Setup](https://docs.anthropic.com/id/docs/claude-code/amazon-bedrock): Guide for configuring Claude Code with Amazon Bedrock.
+- [Long Context Prompting Tips](https://docs.anthropic.com/ko/docs/build-with-claude/prompt-engineering/long-context-tips): Essential tips for effective long context prompting with Claude.
+- [Update Workspace](https://docs.anthropic.com/it/api/admin-api/workspaces/update-workspace): Update workspace details using Anthropic's Admin API.
+- [Keep Claude in Character](https://docs.anthropic.com/en/docs/test-and-evaluate/strengthen-guardrails/keep-claude-in-character): Guide to keep Claude in character during interactions.
+- [Claude 4 Prompt Engineering](https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/claude-4-best-practices): Best practices for prompt engineering with Claude 4 models.
+- [AI Career Coach](https://docs.anthropic.com/zh-TW/resources/prompt-library/career-coach): AI career coach providing guidance for transitioning to AI jobs.
+- [Handling Stop Reasons](https://docs.anthropic.com/en/api/handling-stop-reasons): Learn how to handle stop reasons in API responses.
+- [Streaming API Guide](https://docs.anthropic.com/fr/api/streaming): Learn how to use the streaming text completion API.
+- [Function Fabricator](https://docs.anthropic.com/fr/resources/prompt-library/function-fabricator): Create Python functions from natural language requests effectively.
+- [Grammar Genie Tool](https://docs.anthropic.com/id/resources/prompt-library/grammar-genie): A tool for rewriting text into grammatically correct versions.
+- [Create Invite API](https://docs.anthropic.com/de/api/admin-api/invites/create-invite): Create organization invites using the Anthropic Admin API.
+- [PII Purifier](https://docs.anthropic.com/en/resources/prompt-library/pii-purifier): Expertly redact personally identifiable information from text inputs.
+- [API Rate Limits](https://docs.anthropic.com/en/api/rate-limits): Details on API rate and spend limits for organizations.
+- [Delete Files API](https://docs.anthropic.com/ja/api/files-delete): Delete files using the Anthropic API with specific headers.
+- [Cosmic Keystrokes Game](https://docs.anthropic.com/fr/resources/prompt-library/cosmic-keystrokes): Create a fun web-based typing game using HTML and Tailwind.
+- [Idiom Illuminator](https://docs.anthropic.com/zh-CN/resources/prompt-library/idiom-illuminator): Explore idioms and their meanings with historical context.
+- [VR Fitness Innovator](https://docs.anthropic.com/fr/resources/prompt-library/vr-fitness-innovator): Innovative VR fitness game ideas for active fun and exercise.
+- [Anthropic Files API](https://docs.anthropic.com/id/api/files-list): Manage and list files using the Anthropic API effectively.
+- [Message Batches API](https://docs.anthropic.com/ja/api/creating-message-batches): Learn how to create message batches using the API.
+- [Cancel Message Batches](https://docs.anthropic.com/de/api/canceling-message-batches): Learn how to cancel message batches in the API.
+- [Riddle Prompt Library](https://docs.anthropic.com/it/resources/prompt-library/riddle-me-this): Generate clever riddles with hints and solutions for users.
+- [Claude Model Deprecations](https://docs.anthropic.com/fr/docs/about-claude/model-deprecations): Overview of model deprecations and migration guidelines for Claude.
+- [Client SDKs Overview](https://docs.anthropic.com/en/api/client-sdks): Explore Anthropic's Client SDKs for various programming languages.
+- [Anthropic Files API](https://docs.anthropic.com/pt/docs/build-with-claude/files): Manage files easily with Anthropic's API for Claude.
+- [Citing Sources Guide](https://docs.anthropic.com/ja/resources/prompt-library/cite-your-sources): Learn how to properly cite sources using API features.
+- [Update Workspace](https://docs.anthropic.com/en/api/admin-api/workspaces/update-workspace): Update workspace details using Anthropic's Admin API.
+- [Socratic Sage Prompts](https://docs.anthropic.com/zh-CN/resources/prompt-library/socratic-sage): Explore Socratic dialogue for critical thinking on various topics.
+- [Claude Model Deprecations](https://docs.anthropic.com/de/docs/about-claude/model-deprecations): Overview of model deprecations and migration guidelines for Claude.
+- [Claude Code Costs](https://docs.anthropic.com/en/docs/claude-code/costs): Manage Claude Code costs effectively with usage tracking tips.
+- [Monitoring Usage](https://docs.anthropic.com/ru/docs/claude-code/monitoring-usage): Monitor usage metrics and events with OpenTelemetry support.
+- [Prompt Engineering Overview](https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview): Comprehensive guide on effective prompt engineering techniques.
+- [Migration Guide](https://docs.anthropic.com/en/api/migrating-from-text-completions-to-messages): Guide for migrating from Text Completions to Messages API.
+- [Files API Overview](https://docs.anthropic.com/ru/api/files-create): Upload and manage files using the Anthropic API.
+- [Excel Formula Expert](https://docs.anthropic.com/fr/resources/prompt-library/excel-formula-expert): Advanced Excel formulas for complex calculations and data manipulation.
+- [Sci-Fi Scenario Simulator](https://docs.anthropic.com/ko/resources/prompt-library/sci-fi-scenario-simulator): Explore sci-fi scenarios and discuss ethical challenges involved.
+- [Admin API Overview](https://docs.anthropic.com/it/api/administration-api): Manage organization resources programmatically with Admin API.
+- [Create User Invites](https://docs.anthropic.com/zh-CN/api/admin-api/invites/create-invite): Create invites for users in Anthropic organizations.
+- [API Key Management](https://docs.anthropic.com/ja/api/admin-api/apikeys/get-api-key): Retrieve and manage your Anthropic API keys effectively.
+- [Claude Code Hooks Guide](https://docs.anthropic.com/en/docs/claude-code/hooks-guide): Learn to use Claude Code hooks for automation.
+- [Futuristic Fashion Advisor](https://docs.anthropic.com/id/resources/prompt-library/futuristic-fashion-advisor): Explore avant-garde fashion advice tailored to personal style.
+- [Python Bug Buster](https://docs.anthropic.com/ru/resources/prompt-library/python-bug-buster): Analyze Python code, identify bugs, and provide corrections.
+- [Culinary Creator](https://docs.anthropic.com/pt/resources/prompt-library/culinary-creator): Generate personalized recipe ideas based on user ingredients.
+- [Content Moderation with Claude](https://docs.anthropic.com/ja/docs/about-claude/use-case-guides/content-moderation): Explore content moderation techniques using Claude for effective user-generated content management.
+- [Implementing Tool Use](https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/implement-tool-use): Learn how to effectively implement tool use with Claude models.
+- [Message Batches API](https://docs.anthropic.com/id/api/listing-message-batches): API documentation for managing message batches effectively.
+- [Prompt Engineering Overview](https://docs.anthropic.com/zh-TW/docs/build-with-claude/prompt-engineering/overview): Explore effective prompt engineering techniques for Claude models.
+- [Claude Code Data Usage](https://docs.anthropic.com/zh-CN/docs/claude-code/data-usage): Anthropic's data usage policies for Claude Code explained.
+- [Claude Code Integrations](https://docs.anthropic.com/fr/docs/claude-code/third-party-integrations): Overview of Claude Code third-party integration options and configurations.
+- [Prompt Templates Guide](https://docs.anthropic.com/ru/docs/build-with-claude/prompt-engineering/prompt-templates-and-variables): Learn to use prompt templates and variables effectively.
+- [Message Batches API](https://docs.anthropic.com/ja/api/retrieving-message-batches): Retrieve message batches using the Anthropic API effectively.
+- [Corporate Proxy Setup](https://docs.anthropic.com/ja/docs/claude-code/corporate-proxy): Guide for configuring corporate proxy settings in Claude Code.
+- [Prompt Engineering Techniques](https://docs.anthropic.com/zh-CN/docs/build-with-claude/prompt-engineering/chain-of-thought): Explore techniques for effective prompt engineering with Claude.
+- [Claude Code Settings](https://docs.anthropic.com/zh-CN/docs/claude-code/settings#available-settings): Explore Claude Code settings for customization and configuration.
+- [Anthropic Documentation](https://docs.anthropic.com/en/home): Explore Anthropic's API, Claude Code, and resources.
+- [Tongue Twister Library](https://docs.anthropic.com/id/resources/prompt-library/tongue-twister): Explore creative and complex tongue twisters for fun.
+- [Prefill Claude's Responses](https://docs.anthropic.com/zh-TW/docs/build-with-claude/prompt-engineering/prefill-claudes-response): Learn how to prefill Claude's responses for better control.
+- [Citing Sources Guide](https://docs.anthropic.com/id/resources/prompt-library/cite-your-sources): Learn how to effectively cite sources using Anthropic's API features.
+- [Claude Tool Use Overview](https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/overview): Learn how to effectively use tools with Claude AI.
+- [Migration to Claude 4](https://docs.anthropic.com/de/docs/about-claude/models/migrating-to-claude-4): Guidelines for migrating from Claude 3.7 to Claude 4 models.
+- [Mood Colorizer](https://docs.anthropic.com/en/resources/prompt-library/mood-colorizer): Generate HEX color codes based on mood descriptions.
+- [Cancel Message Batches](https://docs.anthropic.com/es/api/canceling-message-batches): Learn how to cancel message batches in Anthropic API.
+- [Git Commands Guide](https://docs.anthropic.com/ja/resources/prompt-library/git-gud): Learn essential Git commands for saving local file changes.
+- [Alien Anthropologist Prompt](https://docs.anthropic.com/de/resources/prompt-library/alien-anthropologist): Explore human culture through the lens of an alien anthropologist.
+- [Direction Decoder](https://docs.anthropic.com/en/resources/prompt-library/direction-decoder): Transform natural language descriptions into clear step-by-step directions.
+- [Data Organizer](https://docs.anthropic.com/en/resources/prompt-library/data-organizer): Organize unstructured text into a structured JSON format.
+- [Text Editor Tool](https://docs.anthropic.com/ja/docs/agents-and-tools/tool-use/text-editor-tool): Claude's text editor tool assists in debugging and editing text files.
+- [Claude AI Glossary](https://docs.anthropic.com/id/docs/about-claude/glossary): Glossary of terms related to Claude AI model.
+- [Anthropic Release Notes](https://docs.anthropic.com/it/release-notes/overview): Latest updates and improvements for Anthropic's API and applications.
+- [Delete Workspace Member](https://docs.anthropic.com/de/api/admin-api/workspace_members/delete-workspace-member): Delete a member from a workspace using Admin API.
+- [Claude 4 Prompt Engineering](https://docs.anthropic.com/es/docs/build-with-claude/prompt-engineering/claude-4-best-practices): Best practices for prompt engineering with Claude 4 models.
+- [Claude Ticket Routing Guide](https://docs.anthropic.com/en/docs/about-claude/use-case-guides/ticket-routing): Learn how to effectively use Claude for ticket routing.
+- [Anthropic Admin API](https://docs.anthropic.com/fr/api/administration-api): Manage organization resources programmatically with Anthropic's Admin API.
+- [Legal Document Summarization](https://docs.anthropic.com/en/docs/about-claude/use-case-guides/legal-summarization): Learn how to use Claude for efficient legal document summarization.
+- [Claude Code Hooks](https://docs.anthropic.com/fr/docs/claude-code/hooks): Explore Claude Code hooks configuration and usage examples.
+- [Anthropic IP Addresses](https://docs.anthropic.com/id/api/ip-addresses): Details on Anthropic's IP addresses for API connections.
+- [Master Moderator Prompt](https://docs.anthropic.com/en/resources/prompt-library/master-moderator): Guidelines for using the Master Moderator prompt effectively.
+- [Chaining Prompts Guide](https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/chain-prompts): Learn to chain prompts for improved task performance.
+- [API Versioning Overview](https://docs.anthropic.com/id/api/versioning): Overview of API versioning and updates for Anthropic.
+- [Claude Content Moderation](https://docs.anthropic.com/en/docs/about-claude/use-case-guides/content-moderation): Guide for using Claude in content moderation effectively.
+- [OpenAI SDK Compatibility](https://docs.anthropic.com/id/api/openai-sdk): Explore the OpenAI SDK compatibility with Anthropic API.
+- [Dream Interpretation Guide](https://docs.anthropic.com/id/resources/prompt-library/dream-interpreter): Explore dream interpretations and symbolism for personal insights.
+- [Anthropic API Documentation](https://docs.anthropic.com/es/home): Explore Anthropic's API and Claude documentation for developers.
+- [Anthropic Files API](https://docs.anthropic.com/es/api/files-list): Manage and list files using Anthropic's API effectively.
+- [Python Bug Buster](https://docs.anthropic.com/id/resources/prompt-library/python-bug-buster): Analyze Python code snippets to identify and fix bugs efficiently.
+- [Claude Code Gateway](https://docs.anthropic.com/id/docs/claude-code/llm-gateway): Centralized proxy for Claude Code model management and usage.
+- [API Errors Overview](https://docs.anthropic.com/en/api/errors): Detailed guide on handling API errors and limits.
+- [Corporate Proxy Setup](https://docs.anthropic.com/de/docs/claude-code/corporate-proxy): Configure corporate proxy settings for Claude Code usage.
+- [OpenAI SDK Compatibility](https://docs.anthropic.com/de/api/openai-sdk): Explore compatibility and usage of OpenAI SDK with Anthropic API.
+- [Eco-Friendly Brand Builder](https://docs.anthropic.com/en/resources/prompt-library/brand-builder): Create a detailed brand identity for eco-friendly fashion.
+- [Prefill Claude's Responses](https://docs.anthropic.com/fr/docs/build-with-claude/prompt-engineering/prefill-claudes-response): Learn how to prefill Claude's responses for better control.
+- [Chaining Prompts Guide](https://docs.anthropic.com/es/docs/build-with-claude/prompt-engineering/chain-prompts): Learn to effectively chain prompts for complex tasks.
+- [Claude Search Results](https://docs.anthropic.com/fr/docs/build-with-claude/search-results): Explore search results integration with Claude for applications.
+- [Claude Code Setup](https://docs.anthropic.com/de/docs/claude-code/setup): Guide for setting up Claude Code on various systems.
