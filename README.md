@@ -1,87 +1,120 @@
 <!-- @format -->
 
-# LLMs.txt Generator API
+# LLMs.txt Generation Microservice
 
-A FastAPI-based API to crawl a website and generate an llms.txt file, using the Firecrawl API.
+[![Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![Framework](https://img.shields.io/badge/Framework-FastAPI-blue)](https://fastapi.tiangolo.com/)
+[![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
-## Features
+A production-ready microservice for generating structured `llms.txt` files from any website. This service uses a non-blocking, asynchronous architecture to handle long-running crawls efficiently, providing a robust backend engine for AI and RAG (Retrieval-Augmented Generation) applications.
 
-- Modular codebase with helper functions in `helpers.py`
-- Fast, region-specific crawling using US-based stealth proxies
-- Caching of crawl results for up to 1 week to minimize API usage and speed up repeated requests
-- Robust error handling and input validation
-- Outputs results to both API response and a local file (`output_llm.txt`)
+---
 
-## Setup
+## Core Features ✨
 
-1. **Clone the repository**
-2. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. **Set up your `.env` file**
-   - Add your Firecrawl API key:
-     ```
-     FIRECRAWL_API_KEY=your_api_key_here
-     ```
-4. **Run the server**
-   ```bash
-   uvicorn main:app --reload
-   ```
+- **Asynchronous Job Processing**: Initiate crawls instantly and poll for results via a `job_id`. This non-blocking design ensures a fast UI/client experience, even when crawling large websites.
 
-## Usage
+- **Intelligent Structuring**: Automatically groups discovered pages by URL path (e.g., `/blog`, `/docs`) and applies language filtering to produce a clean, semantically organized `llms.txt` file, a significant improvement over simple link lists.
 
-### Generate llms.txt
+- **Data Persistence & Refresh Logic**: Caches completed crawl results to a local data store and provides an endpoint to trigger re-crawls for stale data (defaulting to 7 days), ensuring content can be kept fresh.
 
-Send a POST request to `/generate-llms-txt` with a JSON body:
+- **Modular & Production-Ready**: Cleanly organized into a core application (`main.py`) and helper modules (`helpers.py`), following modern Python best practices for maintainability and testing.
 
-```json
-{
-	"url": "https://www.scrapethissite.com/pages/simple/",
-	"limit": 20
-}
-```
+---
 
-- `url`: The website to crawl (required)
-- `limit`: Max number of pages to crawl (optional, default: 20, max: 500)
+## Architecture Overview 🏛️
 
-Example with `curl`:
+The service is built as a standalone component for a decoupled web stack. The asynchronous workflow is key to its performance and scalability.
 
-```bash
-curl -X POST "http://127.0.0.1:8000/generate-llms-txt" \
-  -H "Content-Type: application/json" \
-  -d '{"url": "https://www.scrapethissite.com/pages/simple/", "limit": 10}'
-```
+**Request Lifecycle:**
 
-### Output
+1.  Client `POSTS` a URL to `/generate-llms-txt`.
+2.  The server immediately initiates the background job via Firecrawl and responds with a `job_id`.
+3.  The client polls the `GET /crawl-status/{job_id}` endpoint.
+4.  Once the job is complete, the server processes, formats, and returns the final `llms.txt`, caching the result on the filesystem.
 
-- The API returns the llms.txt content as plain text.
-- The same content is written to `output_llm.txt` in your project directory.
+[Image of an asynchronous job processing diagram]
 
-## Configuration & Customization
+---
 
-- **Proxy & Location:**
-  - Uses US-based stealth proxies by default for region-specific crawling and to minimize credit usage.
-- **Caching:**
-  - Results are cached for 1 week (`maxAge=604800000` ms) to speed up repeated crawls.
-- **File Output:**
-  - Output file and mode can be customized in `write_output_to_file` in `helpers.py`.
-- **Error Handling:**
-  - All errors are handled gracefully and returned as HTTP error responses.
+## API Endpoints
 
-## Code Structure
+| Method | Path                      | Description                                                                            |
+| :----- | :------------------------ | :------------------------------------------------------------------------------------- |
+| `POST` | `/generate-llms-txt`      | Kicks off a new crawl job. Responds immediately with a `job_id`.                       |
+| `GET`  | `/crawl-status/{job_id}`  | Checks the status of a job. Returns progress or the final `llms.txt` if complete.      |
+| `POST` | `/refresh-crawl/{job_id}` | Checks if a completed job's data is older than 7 days and starts a new crawl if it is. |
+| `GET`  | `/`                       | Root endpoint providing basic API information.                                         |
 
-- `main.py` — FastAPI app, endpoint logic, and grouping/formatting
-- `helpers.py` — All helper functions (validation, options, error handling, file writing)
-- `requirements.txt` — Python dependencies
-- `output_llm.txt` — Output file (generated)
+---
 
-## Extending
+## 🚀 Getting Started
 
-- Add more helper functions to `helpers.py` as needed
-- Adjust crawl options in `build_scrape_options` for different regions, proxies, or cache durations
-- Customize grouping/formatting logic in `main.py`
+### Prerequisites
 
-## License
+- Python 3.9+
+- An API key from [Firecrawl](https://www.firecrawl.dev/)
 
-MIT
+### Installation & Setup
+
+1.  **Clone the repository:**
+
+    ```bash
+    git clone <your-repo-url>
+    cd <your-repo-directory>
+    ```
+
+2.  **Create and activate a virtual environment:**
+
+    ```bash
+    python3 -m venv venv
+    source venv/bin/activate
+    ```
+
+3.  **Install dependencies:**
+
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+4.  **Set up your environment variables:**
+    Create a file named `.env` in the project root and add your Firecrawl API key:
+    ```env
+    FIRECRAWL_API_KEY="fc-YOUR_API_KEY_HERE"
+    ```
+
+### Running the Service
+
+1.  **Start the FastAPI Server:**
+
+    ```bash
+    uvicorn main:app --reload
+    ```
+
+    The API will be available at `http://127.0.0.1:8000`.
+
+2.  **Use the Python Client for Testing:**
+    In a new terminal, run the provided client script to start a job and see the results.
+    ```bash
+    python client.py
+    ```
+
+---
+
+## 🛣️ Project Roadmap
+
+This microservice is the foundational component of a larger web application. The next steps are:
+
+- [ ] **Dockerize the Application**: Containerize the service for consistent, isolated deployments.
+- [ ] **Deploy to Production**: Deploy to a cloud platform like Render or Railway.
+- [ ] **Integrate with Frontend**: Connect this API to a Next.js and Supabase frontend.
+
+---
+
+## Technology Stack
+
+- **Backend Framework**: FastAPI
+- **Web Crawling Service**: Firecrawl API
+- **Data Validation**: Pydantic
+- **HTTP Client (for testing)**: Requests

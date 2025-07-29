@@ -1,5 +1,26 @@
-## Wiki
+## De
 
-- [Web scraping - Wikipedia](https://en.wikipedia.org/wiki/Web_scraping)
-- [Editing Web scraping - Wikipedia](https://en.wikipedia.org/wiki/Web_scraping?oldid=1297146564&action=edit)
-- [Editing Web scraping - Wikipedia](https://en.wikipedia.org/wiki/Web_scraping?action=edit)
+- [Workspace-Mitglied abrufen - Anthropic](https://docs.anthropic.com/de/api/admin-api/workspace_members/get-workspace-member)
+- [Workspace-Mitglied aktualisieren - Anthropic](https://docs.anthropic.com/de/api/admin-api/workspace_members/update-workspace-member)
+- [Benutzer entfernen - Anthropic](https://docs.anthropic.com/de/api/admin-api/users/remove-user)
+- [Benutzer aktualisieren - Anthropic](https://docs.anthropic.com/de/api/admin-api/users/update-user)
+- [Einladung löschen - Anthropic](https://docs.anthropic.com/de/api/admin-api/invites/delete-invite)
+- [Einladung abrufen - Anthropic](https://docs.anthropic.com/de/api/admin-api/invites/get-invite)
+- [Workspace-Mitglied löschen - Anthropic](https://docs.anthropic.com/de/api/admin-api/workspace_members/delete-workspace-member)
+- [API-Schlüssel auflisten - Anthropic](https://docs.anthropic.com/de/api/admin-api/apikeys/list-api-keys)
+- [Einladung erstellen - Anthropic](https://docs.anthropic.com/de/api/admin-api/invites/create-invite)
+- [Arbeitsbereich archivieren - Anthropic](https://docs.anthropic.com/de/api/admin-api/workspaces/archive-workspace)
+- [Arbeitsbereich-Mitglied hinzufügen - Anthropic](https://docs.anthropic.com/de/api/admin-api/workspace_members/create-workspace-member)
+- [Arbeitsbereich abrufen - Anthropic](https://docs.anthropic.com/de/api/admin-api/workspaces/get-workspace)
+- [Benutzer abrufen - Anthropic](https://docs.anthropic.com/de/api/admin-api/users/get-user)
+- [Einladungen auflisten - Anthropic](https://docs.anthropic.com/de/api/admin-api/invites/list-invites)
+- [Arbeitsbereich-Mitglieder auflisten - Anthropic](https://docs.anthropic.com/de/api/admin-api/workspace_members/list-workspace-members)
+- [Benutzer auflisten - Anthropic](https://docs.anthropic.com/de/api/admin-api/users/list-users)
+- [Arbeitsbereich-Mitglieder auflisten - Anthropic](https://docs.anthropic.com/de/api/admin-api/workspace_members/list-workspace-members)
+- [Arbeitsbereich erstellen - Anthropic](https://docs.anthropic.com/de/api/admin-api/workspaces/create-workspace)
+- [API-Schlüssel abrufen - Anthropic](https://docs.anthropic.com/de/api/admin-api/apikeys/get-api-key)
+- [API-Schlüssel aktualisieren - Anthropic](https://docs.anthropic.com/de/api/admin-api/apikeys/update-api-key)
+
+## Homepage
+
+- [Home - Anthropic](https://docs.anthropic.com/)

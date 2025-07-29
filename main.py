@@ -57,20 +57,23 @@ def perform_crawl(target_url: str, limit: int = 20):
         )
 
     try:
-        crawl_response = firecrawl_app.crawl_url(
+        print(f"Crawling URL: {target_url} with limit: {limit}")
+        crawl_job = firecrawl_app.async_crawl_url(
             url=target_url,
             limit=limit,
             max_concurrency=20,
             scrape_options=build_scrape_options(),
         )
-        if not crawl_response or not crawl_response.data:
-            err = "No Response Found!" if not crawl_response else "No Data Found!"
-            raise HTTPException(status_code=404, detail=err)
-        data = crawl_response.data or []  # Defaults to an empty list if data is None
-        return data if isinstance(data, list) else [data]
-    except HTTPException:
-        # Re-raise HTTPExceptions as-is
-        raise
+        if not crawl_job or not crawl_job.id:
+            raise HTTPException(
+                status_code=500, detail="Failed to start crawl job with Firecrawl."
+            )
+        # bc async_crawl_url, return job_id + status_url to poll when needed
+        return {
+            "message": "Crawl job started successfully",
+            "job_id": crawl_job.id,
+            "status_url": f"/crawl-status/{crawl_job.id}",
+        }
     except Exception as e:
         handle_crawl_exception(e, target_url)
 
@@ -163,33 +166,45 @@ async def generate_llms_txt(request: CrawlRequest):
     print(f"Starting crawl for: {target_url} with limit: {limit}")
 
     try:
-        # Step 1: Perform the crawl to get page data
-        crawled_pages = perform_crawl(target_url, limit)
-        if not isinstance(crawled_pages, list):
-            crawled_pages = [] if not crawled_pages else [crawled_pages]
-
-        # Step 2: Group the results by URL path
-        grouped_pages = group_crawled_pages(crawled_pages)
-
-        # Step 3: Format the groups into the final llms.txt string
-        final_output = format_groups_to_llmstxt(grouped_pages)
-
-        # Step 4: Write the output to a file
-        success = write_output_to_file(final_output)
-        if not success:
-            print("Failed to write output to file")
-
-        return PlainTextResponse(content=final_output)
-
+        return perform_crawl(target_url, limit)
     except HTTPException as e:
-        # If an HTTPException was raised in the helpers, re-raise it
         raise e
-
     except Exception as e:
-        print(f"Unexpected error while crawling {target_url}: {e}")
-        return PlainTextResponse(
-            content=f"An unexpected error occurred: {str(e)}", status_code=500
-        )
+        handle_crawl_exception(e, target_url)
+
+
+@app.get("/crawl-status/{job_id}", response_class=PlainTextResponse)
+async def get_crawl_status(job_id: str):
+    """
+    Checks the status of a crawl job. If complete, formats and returns the llms.txt.
+    """
+    try:
+        print(f"Checking status for job_id: {job_id}")
+        status_response = firecrawl_app.check_crawl_status(job_id)
+
+        if status_response.status == "completed":
+            if not status_response.data:
+                raise HTTPException(
+                    status_code=404, detail="Crawl completed but no data was found."
+                )
+
+            grouped_pages = group_crawled_pages(status_response.data)
+            final_output = format_groups_to_llmstxt(grouped_pages)
+
+            return PlainTextResponse(content=final_output)
+
+        elif status_response.status in ["failed", "cancelled"]:
+            return PlainTextResponse(
+                content=f"Job {job_id} failed or was cancelled.", status_code=400
+            )
+        else:
+            return PlainTextResponse(
+                content=f"Job is still running. Status: {status_response.status}. "
+                f"Completed {status_response.completed}/{status_response.total} pages.",
+                status_code=202,
+            )
+    except Exception as e:
+        handle_crawl_exception(e, f"job_id: {job_id}")
 
 
 if __name__ == "__main__":
