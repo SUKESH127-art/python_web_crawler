@@ -1,7 +1,8 @@
 import os
 import time
+import typing
 from collections import defaultdict
-from typing import Optional
+from typing import Literal, Optional
 from urllib.parse import urlparse
 
 import uvicorn
@@ -9,6 +10,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import PlainTextResponse
 from firecrawl import FirecrawlApp
+from firecrawl.firecrawl import LocationConfig, ScrapeOptions
 from pydantic import BaseModel, HttpUrl, field_validator
 
 # load environment variable
@@ -51,6 +53,38 @@ def validate_url_scheme(url: str) -> bool:
     return parsed.scheme in supported_schemes
 
 
+def build_scrape_options(
+    max_age: int = 604800000,
+    proxy: Literal["basic", "stealth", "auto"] = "stealth",
+    country: str = "US",
+) -> ScrapeOptions:
+    return ScrapeOptions(
+        maxAge=max_age, proxy=proxy, location=LocationConfig(country=country)
+    )
+
+
+def handle_crawl_exception(e, target_url):
+    print(f"Error during Firecrawl API call for {target_url}: {e}")
+    if "timeout" in str(e).lower():
+        raise HTTPException(
+            status_code=408,
+            detail="Request timed out. The website may be too large or slow to respond.",
+        )
+    elif "rate limit" in str(e).lower() or "quota" in str(e).lower():
+        raise HTTPException(
+            status_code=429, detail="Rate limit exceeded. Please try again later."
+        )
+    elif "not found" in str(e).lower() or "404" in str(e):
+        raise HTTPException(
+            status_code=404, detail="Website not found or inaccessible."
+        )
+    else:
+        raise HTTPException(
+            status_code=502,
+            detail=f"An error occurred with the crawling service: {str(e)}",
+        )
+
+
 def perform_crawl(target_url: str, limit: int = 20):
     """
     Calls the Firecrawl API to crawl the site and returns the response.
@@ -67,42 +101,20 @@ def perform_crawl(target_url: str, limit: int = 20):
             url=target_url,
             limit=limit,
             max_concurrency=20,
-            crawl_options={
-                "maxAge": 604800000,  # 1 week cache
-                "proxy": "stealth",
-                "location": {"country": "US"},
-            },
+            scrape_options=build_scrape_options(),
         )
         if not crawl_response or not crawl_response.data:
             err = "No Response Found!" if not crawl_response else "No Data Found!"
             raise HTTPException(status_code=404, detail=err)
-        return crawl_response.data
-    except HTTPException:
-        # Re-raise HTTPExceptions as-is
-        raise
+        # Ensure we always pass a list to group_crawled_pages
+        data = crawl_response.data
+        if not data:
+            return []
+        if isinstance(data, list):
+            return data
+        return [data]
     except Exception as e:
-        # Log the error for debugging
-        print(f"Error during Firecrawl API call for {target_url}: {e}")
-
-        # Provide more specific error messages based on exception type
-        if "timeout" in str(e).lower():
-            raise HTTPException(
-                status_code=408,
-                detail="Request timed out. The website may be too large or slow to respond.",
-            )
-        elif "rate limit" in str(e).lower() or "quota" in str(e).lower():
-            raise HTTPException(
-                status_code=429, detail="Rate limit exceeded. Please try again later."
-            )
-        elif "not found" in str(e).lower() or "404" in str(e):
-            raise HTTPException(
-                status_code=404, detail="Website not found or inaccessible."
-            )
-        else:
-            raise HTTPException(
-                status_code=502,
-                detail=f"An error occurred with the crawling service: {str(e)}",
-            )
+        handle_crawl_exception(e, target_url)
 
 
 def group_crawled_pages(pages: list):
@@ -182,18 +194,25 @@ def format_groups_to_llmstxt(url_groups: dict):
     return result
 
 
-def write_output_to_file(content: str, filename: str = "output_llm.txt"):
+def write_output_to_file(
+    content: str, filename: str = "output_llm.txt", mode: str = "w"
+) -> bool:
     """
-    Writes the given content to a local file.
+    Writes the given content to a local file. Returns True if successful, False otherwise.
     """
     try:
-        with open(filename, "w", encoding="utf-8") as f:
+        (
+            os.makedirs(os.path.dirname(filename), exist_ok=True)
+            if os.path.dirname(filename)
+            else None
+        )
+        with open(filename, mode, encoding="utf-8") as f:
             f.write(content)
         print(f"Successfully wrote output to {filename}")
+        return True
     except IOError as e:
-        # Log the error but don't crash the request. The primary goal is to
-        # return the data to the user.
         print(f"Error writing to file {filename}: {e}")
+        return False
 
 
 # Crawling logic
@@ -210,7 +229,8 @@ async def generate_llms_txt(request: CrawlRequest):
     try:
         # Step 1: Perform the crawl to get page data
         crawled_pages = perform_crawl(target_url, limit)
-
+        if not isinstance(crawled_pages, list):
+            crawled_pages = [] if crawled_pages is None else [crawled_pages]
         # Step 2: Group the results by URL path
         grouped_pages = group_crawled_pages(crawled_pages)
 
@@ -218,7 +238,9 @@ async def generate_llms_txt(request: CrawlRequest):
         final_output = format_groups_to_llmstxt(grouped_pages)
 
         # Step 4: Write the output to a file
-        write_output_to_file(final_output)
+        success = write_output_to_file(final_output)
+        if not success:
+            print("Failed to write output to file")
 
         return PlainTextResponse(content=final_output)
 
@@ -248,29 +270,6 @@ async def root():
             "redoc": "/redoc",
         },
     }
-
-
-@app.get("/test-connection")
-async def test_connection():
-    """
-    Test the Firecrawl API connection.
-    """
-    try:
-        # Try a simple API call to test the connection
-        print("Testing Firecrawl API connection...")
-        simple_url = "https://www.scrapethissite.com/pages/simple/"
-        firecrawl_app.scrape_url(simple_url)
-        # You might need to check what methods are available for testing
-        return {
-            "status": "success",
-            "message": "Firecrawl API connection test completed",
-            "api_key_configured": bool(firecrawl_api_key),
-            "api_key_length": len(firecrawl_api_key) if firecrawl_api_key else 0,
-        }
-    except Exception as e:
-        raise HTTPException(
-            status_code=502, detail=f"Firecrawl API connection failed: {str(e)}"
-        )
 
 
 if __name__ == "__main__":
