@@ -8,10 +8,19 @@ orbs:
 jobs:
   build-and-test:
     docker:
-      - image: cimg/docker:20.10.24-git
+      - image: cimg/python:3.11.7
     steps:
       - checkout
 
+      # Install Docker
+      - run:
+          name: Install Docker
+          command: |
+            curl -fsSL https://get.docker.com -o get-docker.sh
+            sh get-docker.sh
+            sudo usermod -aG docker $USER
+
+      # Login to Docker Hub to avoid rate limiting
       - run:
           name: Login to Docker Hub
           command: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
@@ -57,7 +66,7 @@ jobs:
 
   deploy:
     docker:
-      - image: cimg/docker:20.10.24-git
+      - image: cimg/python:3.11.7
     steps:
       - checkout
 
@@ -65,7 +74,15 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
 
-      # Login is also required in this job as it runs in a separate environment.
+      # Install Docker
+      - run:
+          name: Install Docker
+          command: |
+            curl -fsSL https://get.docker.com -o get-docker.sh
+            sh get-docker.sh
+            sudo usermod -aG docker $USER
+
+      # Login to Docker Hub to avoid rate limiting
       - run:
           name: Login to Docker Hub
           command: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
