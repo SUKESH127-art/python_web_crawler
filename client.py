@@ -19,12 +19,9 @@ from helpers import (
 def run_job(url: str):
     """Starts a crawl job and polls for the result."""
     base_url = get_base_url()
-    
+
     console.print(
-        create_info_panel(
-            f"🚀 Starting crawl for: {url}",
-            "Step 1: Initiate Crawl"
-        )
+        create_info_panel(f"🚀 Starting crawl for: {url}", "Step 1: Initiate Crawl")
     )
 
     # --- Start the Crawl Job ---
@@ -34,7 +31,7 @@ def run_job(url: str):
             json={"url": url},
             timeout=10,  # Timeout for the initial request
         )
-        
+
         job_data = extract_job_data(response)
         if not job_data:
             return
@@ -50,10 +47,7 @@ def run_job(url: str):
     # --- Poll for the Result ---
     status_url = build_status_url(base_url, job_data)
     console.print(
-        create_info_panel(
-            f"Polling status at: {status_url}",
-            "Step 2: Check Status"
-        )
+        create_info_panel(f"Polling status at: {status_url}", "Step 2: Check Status")
     )
 
     spinner = Spinner(
@@ -77,8 +71,7 @@ def run_job(url: str):
                 console.print("[green]✔[/green] Crawl completed!")
                 console.print(
                     create_success_panel(
-                        poll_response.text,
-                        f"Final llms.txt for {url}"
+                        poll_response.text, f"Final llms.txt for {url}"
                     )
                 )
                 break
@@ -89,5 +82,5 @@ def run_job(url: str):
 
 
 if __name__ == "__main__":
-    target_site = "https://www.scrapethissite.com/"
+    target_site = "https://httpbin.org/html"
     run_job(target_site)

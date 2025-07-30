@@ -1,5 +1,5 @@
 import os
-from typing import Literal, Optional, Dict, Any
+from typing import Any, Dict, Literal, Optional
 from urllib.parse import urlparse
 
 import requests
@@ -7,8 +7,6 @@ from fastapi import HTTPException
 from firecrawl.firecrawl import LocationConfig, ScrapeOptions
 from rich.console import Console
 from rich.panel import Panel
-from rich.text import Text
-
 
 # Global console instance for UI components
 console = Console()
@@ -17,8 +15,9 @@ console = Console()
 def load_environment_config() -> str:
     """Load and validate environment configuration."""
     from dotenv import load_dotenv
+
     load_dotenv()
-    
+
     firecrawl_api_key = os.getenv("FIRECRAWL_API_KEY")
     if not firecrawl_api_key:
         raise RuntimeError("Firecrawl's API key isn't found in .env file!")
@@ -96,9 +95,19 @@ def create_info_panel(message: str, title: str = "Info") -> Panel:
     )
 
 
-def handle_request_exception(e: requests.exceptions.RequestException, context: str = "API") -> None:
+def handle_request_exception(
+    e: requests.exceptions.RequestException, context: str = "API"
+) -> None:
     """Handle request exceptions with standardized error display."""
-    error_message = f"Error during {context.lower()}: {e}"
+    if hasattr(e, "response") and e.response is not None:
+        try:
+            error_detail = e.response.json().get("detail", str(e))
+            error_message = f"Error during {context.lower()}: {error_detail}"
+        except:
+            error_message = f"Error during {context.lower()}: {e}"
+    else:
+        error_message = f"Error during {context.lower()}: {e}"
+
     console.print(create_error_panel(error_message, f"{context} Error"))
 
 
@@ -108,11 +117,11 @@ def extract_job_data(response: requests.Response) -> Optional[Dict[str, Any]]:
         response.raise_for_status()
         job_data = response.json()
         job_id = job_data.get("job_id")
-        
+
         if not job_id:
             console.print(create_error_panel("No job_id returned from API."))
             return None
-            
+
         return job_data
     except requests.exceptions.RequestException as e:
         handle_request_exception(e, "Job Creation")
@@ -128,24 +137,3 @@ def build_status_url(base_url: str, job_data: Dict[str, Any]) -> str:
     if status_url.startswith("/"):
         return f"{base_url}{status_url}"
     return f"{base_url}/{status_url}"
-
-
-def write_output_to_file(
-    content: str, filename: str = "output_llm.txt", mode: str = "w"
-) -> bool:
-    """
-    Writes the given content to a local file. Returns True if successful, False otherwise.
-    """
-    try:
-        (
-            os.makedirs(os.path.dirname(filename), exist_ok=True)
-            if os.path.dirname(filename)
-            else None
-        )
-        with open(filename, mode, encoding="utf-8") as f:
-            f.write(content)
-        print(f"Successfully wrote output to {filename}")
-        return True
-    except IOError as e:
-        print(f"Error writing to file {filename}: {e}")
-        return False

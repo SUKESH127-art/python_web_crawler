@@ -13,7 +13,6 @@ from helpers import (
     handle_crawl_exception,
     load_environment_config,
     validate_url_scheme,
-    write_output_to_file,
 )
 
 app = FastAPI(
