@@ -2,20 +2,15 @@
 
 version: 2.1
 
-# The docker orb is no longer strictly needed but is good practice to keep.
 orbs:
   docker: circleci/docker@2.4.0
 
 jobs:
   build-and-test:
-    # Use a basic, general-purpose CircleCI image.
     docker:
-      - image: cimg/base:stable
+      - image: cimg/docker:20.10.24-git
     steps:
       - checkout
-      # Activate a remote Docker environment. This is the key step.
-      - setup_remote_docker:
-          docker_layer_caching: true
       - run:
           name: Login to Docker Hub
           command: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
@@ -23,30 +18,25 @@ jobs:
           name: Build Docker image
           command: docker build -t llms-txt-generator .
       - run:
-          name: Test container startup
+          name: Test container startup and networking
           command: |
-            # 1. Create a dedicated network for our containers to communicate on.
+            # 1. Create the shared network
             docker network create test-net
 
-            # 2. Run the application container on the new network.
-            #    Port mapping (-p) is no longer needed as we connect directly via the network.
+            # 2. Run the application container on the network
             docker run -d --name test-container --network test-net -e FIRECRAWL_API_KEY=test_key llms-txt-generator
 
-            echo "Waiting for container to initialize..."
-            sleep 15
+            echo "Waiting for container to become healthy..."
+            sleep 15 # Give the app time to start
 
-            echo "--- Container Logs ---"
-            docker logs test-container
-            echo "----------------------"
+            # --- THE FIX ---
+            # 3. Run test commands from *another container on the same network*.
+            #    We use a lightweight image that has curl installed.
+            echo "Testing API endpoints from within the network..."
+            docker run --network test-net --rm alpine/curl -f --retry 5 --retry-delay 3 http://test-container:8000/
+            docker run --network test-net --rm alpine/curl -f --retry 5 --retry-delay 3 http://test-container:8000/docs
 
-            echo "Testing container health and API endpoints..."
-            docker ps | grep test-container | grep healthy
-
-            # 3. Connect to the container by its name, not localhost.
-            curl -f --retry 5 --retry-delay 3 http://test-container:8000/ || exit 1
-            curl -f http://test-container:8000/docs || exit 1
-
-            # 4. Clean up the container and the network.
+            # 4. Cleanup
             docker stop test-container
             docker rm test-container
             docker network rm test-net
@@ -64,16 +54,12 @@ jobs:
             - image.tar
 
   deploy:
-    # Use the same basic image for consistency.
     docker:
-      - image: cimg/base:stable
+      - image: cimg/docker:20.10.24-git
     steps:
       - checkout
       - attach_workspace:
           at: /tmp/workspace
-      # Activate the remote Docker environment here as well.
-      - setup_remote_docker:
-          docker_layer_caching: true
       - run:
           name: Login to Docker Hub
           command: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
