@@ -51,11 +51,16 @@ jobs:
             # Run container for testing
             docker run --rm -e FIRECRAWL_API_KEY=test_key llms-txt-generator python -c "import main; print('Application imports successfully')"
 
-      # Store Docker image for deployment
+      # Save Docker image to workspace for deployment
+      - run:
+          name: Save Docker image to workspace
+          command: |
+            mkdir -p workspace
+            docker save -o workspace/image.tar llms-txt-generator
       - persist_to_workspace:
-          root: .
+          root: workspace
           paths:
-            - .
+            - image.tar
 
   deploy:
     docker:
@@ -63,16 +68,21 @@ jobs:
     steps:
       - checkout
 
+      # Attach workspace to access the saved Docker image
+      - attach_workspace:
+          at: /tmp/workspace
+
       # Login to Docker Hub
       - run:
           name: Login to Docker Hub
           command: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
 
-      # Build and tag image
+      # Load and tag the saved Docker image
       - run:
-          name: Build and tag Docker image
+          name: Load and tag Docker image
           command: |
-            docker build -t llms-txt-generator .
+            docker load -i /tmp/workspace/image.tar
+            # The image loads with its original name, so we just need to tag it
             docker tag llms-txt-generator $DOCKER_USERNAME/llms-txt-generator:latest
             docker tag llms-txt-generator $DOCKER_USERNAME/llms-txt-generator:$CIRCLE_SHA1
 
