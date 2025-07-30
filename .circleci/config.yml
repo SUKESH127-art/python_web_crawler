@@ -12,6 +12,11 @@ jobs:
     steps:
       - checkout
 
+      # Login to Docker Hub to avoid rate limiting
+      - run:
+          name: Login to Docker Hub
+          command: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+
       # Build Docker image
       - run:
           name: Build Docker image
@@ -58,6 +63,11 @@ jobs:
     steps:
       - checkout
 
+      # Login to Docker Hub
+      - run:
+          name: Login to Docker Hub
+          command: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+
       # Build and tag image
       - run:
           name: Build and tag Docker image
@@ -65,11 +75,6 @@ jobs:
             docker build -t llms-txt-generator .
             docker tag llms-txt-generator $DOCKER_USERNAME/llms-txt-generator:latest
             docker tag llms-txt-generator $DOCKER_USERNAME/llms-txt-generator:$CIRCLE_SHA1
-
-      # Login to Docker Hub
-      - run:
-          name: Login to Docker Hub
-          command: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
 
       # Push to Docker Hub
       - run:
