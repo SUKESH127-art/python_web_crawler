@@ -25,7 +25,11 @@ def run_job(url: str):
     # --- NEW: Read the internal API key from the environment ---
     internal_api_key = os.getenv("INTERNAL_API_KEY")
     if not internal_api_key:
-        console.print(create_error_panel("INTERNAL_API_KEY not found in .env file.", "Configuration Error"))
+        console.print(
+            create_error_panel(
+                "INTERNAL_API_KEY not found in .env file.", "Configuration Error"
+            )
+        )
         return
 
     headers = {"Authorization": f"Bearer {internal_api_key}"}
