@@ -4,7 +4,8 @@ from typing import Any, Dict, Literal, Optional
 from urllib.parse import urlparse
 
 import requests
-from fastapi import HTTPException
+from fastapi import HTTPException, Security
+from fastapi.security import APIKeyHeader
 from firecrawl.firecrawl import LocationConfig, ScrapeOptions
 from rich.console import Console
 from rich.panel import Panel
@@ -16,6 +17,21 @@ warnings.filterwarnings(
 
 # Global console instance for UI components
 console = Console()
+
+# API Key Authentication
+API_KEY_NAME = "Authorization"
+api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
+
+def get_api_key(key: str = Security(api_key_header)):
+    """Dependency function to validate the API key from the Authorization header."""
+    expected_api_key = os.getenv("INTERNAL_API_KEY")
+    if not expected_api_key:
+        raise HTTPException(status_code=500, detail="Internal server error: API key not configured on the server.")
+
+    if key and key == f"Bearer {expected_api_key}":
+        return key
+    else:
+        raise HTTPException(status_code=401, detail="Unauthorized: Invalid or missing API Key")
 
 
 def load_environment_config() -> str:

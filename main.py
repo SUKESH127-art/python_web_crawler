@@ -3,7 +3,7 @@ from typing import Optional
 from urllib.parse import urlparse
 
 import uvicorn
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.responses import PlainTextResponse
 from firecrawl import FirecrawlApp
 from pydantic import BaseModel, HttpUrl, field_validator
@@ -13,6 +13,7 @@ from helpers import (
     handle_crawl_exception,
     load_environment_config,
     validate_url_scheme,
+    get_api_key,
 )
 
 app = FastAPI(
@@ -150,7 +151,7 @@ def format_groups_to_llmstxt(url_groups: dict):
 
 
 @app.post("/generate-llms-txt")
-async def generate_llms_txt(request: CrawlRequest):
+async def generate_llms_txt(request: CrawlRequest, api_key: str = Depends(get_api_key)):
     """
     Accepts a URL, crawls the site using Firecrawl, and returns the crawled data.
     """
@@ -168,7 +169,7 @@ async def generate_llms_txt(request: CrawlRequest):
 
 
 @app.get("/crawl-status/{job_id}", response_class=PlainTextResponse)
-async def get_crawl_status(job_id: str):
+async def get_crawl_status(job_id: str, api_key: str = Depends(get_api_key)):
     """
     Checks the status of a crawl job. If complete, formats and returns the llms.txt.
     """
