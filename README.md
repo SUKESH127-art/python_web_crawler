@@ -95,9 +95,9 @@ The service is built as a standalone component for a decoupled web stack. The as
     The API will be available at `http://127.0.0.1:8000`.
 
 2.  **Use the Python Client for Testing:**
-    In a new terminal, run the provided client script to start a job and see the results.
+    In a new terminal, run the provided client script to start a job and see the results. If you don't provide a url, it will use a default url.
     ```bash
-    python client.py
+    python client.py https://docs.firecrawl.dev/
     ```
 
 ---

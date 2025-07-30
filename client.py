@@ -1,3 +1,4 @@
+import sys
 import time
 
 import requests
@@ -82,5 +83,17 @@ def run_job(url: str):
 
 
 if __name__ == "__main__":
-    target_site = "https://httpbin.org/html"
-    run_job(target_site)
+    if len(sys.argv) > 1:
+        # Use the URL provided from the command line
+        target_site = sys.argv[1]
+    else:
+        # Use the default URL and provide instructions
+        target_site = "https://www.scrapethissite.com/"
+        console.print(
+            create_info_panel(
+                f"No URL provided. Using default: {target_site}\n\n"
+                f"To crawl a different site, run:\n"
+                f"[bold]python client.py https://example.com[/bold]",
+                "Usage Information",
+            )
+        )
