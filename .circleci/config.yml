@@ -1,0 +1,94 @@
+# @format
+
+version: 2.1
+
+orbs:
+  docker: circleci/docker@2.4.0
+
+jobs:
+  build-and-test:
+    docker:
+      - image: cimg/docker:20.10.24-git
+    steps:
+      - checkout
+
+      # Build Docker image
+      - run:
+          name: Build Docker image
+          command: |
+            docker build -t llms-txt-generator .
+
+      # Test the container
+      - run:
+          name: Test container startup
+          command: |
+            # Start container in background
+            docker run -d --name test-container -p 8000:8000 -e FIRECRAWL_API_KEY=test_key llms-txt-generator
+
+            # Wait for container to start
+            sleep 15
+
+            # Test if container is healthy
+            docker ps | grep test-container | grep healthy
+
+            # Test API endpoints
+            curl -f http://localhost:8000/ || exit 1
+            curl -f http://localhost:8000/docs || exit 1
+
+            # Clean up
+            docker stop test-container
+            docker rm test-container
+
+      # Run Python tests
+      - run:
+          name: Run Python tests
+          command: |
+            # Run container for testing
+            docker run --rm -e FIRECRAWL_API_KEY=test_key llms-txt-generator python -c "import main; print('Application imports successfully')"
+
+      # Store Docker image for deployment
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+
+  deploy:
+    docker:
+      - image: cimg/docker:20.10.24-git
+    steps:
+      - checkout
+
+      # Build and tag image
+      - run:
+          name: Build and tag Docker image
+          command: |
+            docker build -t llms-txt-generator .
+            docker tag llms-txt-generator $DOCKER_USERNAME/llms-txt-generator:latest
+            docker tag llms-txt-generator $DOCKER_USERNAME/llms-txt-generator:$CIRCLE_SHA1
+
+      # Login to Docker Hub
+      - run:
+          name: Login to Docker Hub
+          command: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+
+      # Push to Docker Hub
+      - run:
+          name: Push to Docker Hub
+          command: |
+            docker push $DOCKER_USERNAME/llms-txt-generator:latest
+            docker push $DOCKER_USERNAME/llms-txt-generator:$CIRCLE_SHA1
+
+workflows:
+  version: 2
+  build-test-deploy:
+    jobs:
+      - build-and-test:
+          filters:
+            branches:
+              only: main
+      - deploy:
+          requires:
+            - build-and-test
+          filters:
+            branches:
+              only: main

@@ -100,6 +100,63 @@ The service is built as a standalone component for a decoupled web stack. The as
     python client.py https://docs.firecrawl.dev/
     ```
 
+## 🐳 Docker Deployment
+
+### Local Docker Usage
+
+1. **Build the Docker image:**
+
+   ```bash
+   docker build -t llms-txt-generator .
+   ```
+
+2. **Run the container:**
+
+   ```bash
+   docker run -p 8000:8000 -e FIRECRAWL_API_KEY=your_api_key_here llms-txt-generator
+   ```
+
+3. **Or use an environment file:**
+   ```bash
+   docker run -p 8000:8000 --env-file .env llms-txt-generator
+   ```
+
+### Docker Hub
+
+The latest image is available on Docker Hub:
+
+```bash
+docker pull sukeshram/llms-txt-generator
+```
+
+## 🔄 CI/CD with CircleCI
+
+This project includes automated CI/CD using CircleCI. The pipeline:
+
+1. **Builds** the Docker image
+2. **Tests** the container functionality
+3. **Deploys** to Docker Hub on successful builds
+
+### Setting up CircleCI
+
+1. **Connect your repository** to CircleCI
+2. **Add environment variables** in CircleCI project settings:
+
+   - `DOCKER_USERNAME`: Your Docker Hub username
+   - `DOCKER_PASSWORD`: Your Docker Hub password/token
+
+3. **Push to main branch** to trigger the pipeline
+
+The pipeline will automatically:
+
+- Build and test the Docker image
+- Push to Docker Hub with tags: `latest` and commit SHA
+- Only run on the `main` branch
+
+  ```
+
+  ```
+
 ---
 
 ## 🛣️ Project Roadmap
