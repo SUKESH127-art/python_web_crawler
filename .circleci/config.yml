@@ -25,27 +25,31 @@ jobs:
       - run:
           name: Test container startup
           command: |
-            # Start container in the background
-            docker run -d --name test-container -p 8000:8000 -e FIRECRAWL_API_KEY=test_key llms-txt-generator
+            # 1. Create a dedicated network for our containers to communicate on.
+            docker network create test-net
+
+            # 2. Run the application container on the new network.
+            #    Port mapping (-p) is no longer needed as we connect directly via the network.
+            docker run -d --name test-container --network test-net -e FIRECRAWL_API_KEY=test_key llms-txt-generator
 
             echo "Waiting for container to initialize..."
             sleep 15
 
-            # --- CRITICAL DEBUGGING STEP ---
-            # Print the container's logs to see the application's startup messages or any errors.
             echo "--- Container Logs ---"
             docker logs test-container
             echo "----------------------"
 
-            # Now, test the health and endpoints with retries
             echo "Testing container health and API endpoints..."
             docker ps | grep test-container | grep healthy
-            curl -f --retry 5 --retry-delay 3 http://localhost:8000/ || exit 1
-            curl -f http://localhost:8000/docs || exit 1
 
-            # Cleanup
+            # 3. Connect to the container by its name, not localhost.
+            curl -f --retry 5 --retry-delay 3 http://test-container:8000/ || exit 1
+            curl -f http://test-container:8000/docs || exit 1
+
+            # 4. Clean up the container and the network.
             docker stop test-container
             docker rm test-container
+            docker network rm test-net
       - run:
           name: Run Python tests
           command: docker run --rm -e FIRECRAWL_API_KEY=test_key llms-txt-generator python -c "import main; print('Application imports successfully')"
