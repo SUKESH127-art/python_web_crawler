@@ -12,46 +12,32 @@ jobs:
     steps:
       - checkout
 
-      # Login to Docker Hub to avoid rate limiting
       - run:
           name: Login to Docker Hub
           command: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
 
-      # Build Docker image
       - run:
           name: Build Docker image
           command: |
             docker build -t llms-txt-generator .
 
-      # Test the container
       - run:
           name: Test container startup
           command: |
-            # Start container in background
             docker run -d --name test-container -p 8000:8000 -e FIRECRAWL_API_KEY=test_key llms-txt-generator
-
-            # Wait for container to start
             sleep 15
-
-            # Test if container is healthy
             docker ps | grep test-container | grep healthy
-
-            # Test API endpoints
             curl -f http://localhost:8000/ || exit 1
             curl -f http://localhost:8000/docs || exit 1
-
-            # Clean up
             docker stop test-container
             docker rm test-container
 
-      # Run Python tests
       - run:
           name: Run Python tests
           command: |
-            # Run container for testing
             docker run --rm -e FIRECRAWL_API_KEY=test_key llms-txt-generator python -c "import main; print('Application imports successfully')"
 
-      # Save Docker image to workspace for deployment
+      # Save the tested image to workspace
       - run:
           name: Save Docker image to workspace
           command: |
@@ -68,25 +54,23 @@ jobs:
     steps:
       - checkout
 
-      # Attach workspace to access the saved Docker image
+      # Attach workspace to access the saved image
       - attach_workspace:
           at: /tmp/workspace
 
-      # Login to Docker Hub
+      # Login is also required in this job as it runs in a separate environment.
       - run:
           name: Login to Docker Hub
           command: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
 
-      # Load and tag the saved Docker image
+      # Load and tag the tested image instead of rebuilding
       - run:
           name: Load and tag Docker image
           command: |
             docker load -i /tmp/workspace/image.tar
-            # The image loads with its original name, so we just need to tag it
             docker tag llms-txt-generator $DOCKER_USERNAME/llms-txt-generator:latest
             docker tag llms-txt-generator $DOCKER_USERNAME/llms-txt-generator:$CIRCLE_SHA1
 
-      # Push to Docker Hub
       - run:
           name: Push to Docker Hub
           command: |
