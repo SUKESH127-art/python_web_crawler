@@ -2,30 +2,23 @@
 
 version: 2.1
 
+# The docker orb provides pre-configured environments and commands
 orbs:
   docker: circleci/docker@2.4.0
 
 jobs:
   build-and-test:
-    docker:
-      # FIX: Use an image that has Docker pre-installed.
-      - image: cimg/docker:20.10.24-git
+    # FIX: Use the 'docker/default' executor provided by the orb.
+    # This guarantees a stable environment with the Docker client available.
+    executor: docker/default
     steps:
       - checkout
-
-      # This step is no longer needed because the environment has Docker.
-      # - run:
-      #     name: Install Docker
-      #     ...
-
       - run:
           name: Login to Docker Hub
           command: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-
       - run:
           name: Build Docker image
           command: docker build -t llms-txt-generator .
-
       - run:
           name: Test container startup
           command: |
@@ -36,11 +29,9 @@ jobs:
             curl -f http://localhost:8000/docs || exit 1
             docker stop test-container
             docker rm test-container
-
       - run:
           name: Run Python tests
           command: docker run --rm -e FIRECRAWL_API_KEY=test_key llms-txt-generator python -c "import main; print('Application imports successfully')"
-
       - run:
           name: Save Docker image to workspace
           command: |
@@ -52,30 +43,21 @@ jobs:
             - image.tar
 
   deploy:
-    docker:
-      # FIX: Use an image that has Docker pre-installed.
-      - image: cimg/docker:20.10.24-git
+    # FIX: Use the 'docker/default' executor here as well.
+    executor: docker/default
     steps:
       - checkout
       - attach_workspace:
           at: /tmp/workspace
-
-      # This step is no longer needed.
-      # - run:
-      #     name: Install Docker
-      #     ...
-
       - run:
           name: Login to Docker Hub
           command: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-
       - run:
           name: Load and tag Docker image
           command: |
             docker load -i /tmp/workspace/image.tar
             docker tag llms-txt-generator $DOCKER_USERNAME/llms-txt-generator:latest
             docker tag llms-txt-generator $DOCKER_USERNAME/llms-txt-generator:$CIRCLE_SHA1
-
       - run:
           name: Push to Docker Hub
           command: |
