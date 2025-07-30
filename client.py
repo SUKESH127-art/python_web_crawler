@@ -8,7 +8,6 @@ from rich.text import Text
 from helpers import (
     build_status_url,
     console,
-    create_error_panel,
     create_info_panel,
     create_success_panel,
     extract_job_data,
