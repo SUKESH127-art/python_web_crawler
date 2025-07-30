@@ -129,13 +129,39 @@ The latest image is available on Docker Hub:
 docker pull sukeshram/llms-txt-generator
 ```
 
+## 🚀 Production Deployment
+
+### Ready for Cloud Deployment
+
+This service is now ready for production deployment on cloud platforms like **Render**, **Railway**, or **Heroku**. The Docker image is automatically built, tested, and pushed to Docker Hub via CI/CD.
+
+### Environment Variables for Production
+
+When deploying to production, ensure these environment variables are set:
+
+- `FIRECRAWL_API_KEY`: Your Firecrawl API key
+- `INTERNAL_API_KEY`: A secret key for API authentication
+
+### Deployment Platforms
+
+- **Render**: Use the Docker image from Docker Hub
+- **Railway**: Direct GitHub integration with automatic deployments
+- **Heroku**: Container deployment with the Docker image
+
 ## 🔄 CI/CD with CircleCI
 
-This project includes automated CI/CD using CircleCI. The pipeline:
+This project includes automated CI/CD using CircleCI with **"build once, deploy same"** optimization. The pipeline:
 
-1. **Builds** the Docker image
-2. **Tests** the container functionality
-3. **Deploys** to Docker Hub on successful builds
+1. **Builds** the Docker image once
+2. **Tests** the container functionality thoroughly
+3. **Deploys** the exact same tested image to Docker Hub
+
+### Key Features
+
+- **Build Once, Deploy Same**: Ensures the exact same image that passed tests is deployed
+- **Docker Hub Authentication**: Prevents rate limiting issues
+- **Comprehensive Testing**: Container health checks, API endpoint validation, and import tests
+- **Efficient Workflow**: Eliminates redundant builds, saving time and ensuring consistency
 
 ### Setting up CircleCI
 
@@ -143,13 +169,15 @@ This project includes automated CI/CD using CircleCI. The pipeline:
 2. **Add environment variables** in CircleCI project settings:
 
    - `DOCKER_USERNAME`: Your Docker Hub username
-   - `DOCKER_PASSWORD`: Your Docker Hub password/token
+   - `DOCKER_PASSWORD`: Your Docker Hub access token (not login password)
 
 3. **Push to main branch** to trigger the pipeline
 
 The pipeline will automatically:
 
 - Build and test the Docker image
+- Save the tested image to workspace
+- Load and tag the exact same image for deployment
 - Push to Docker Hub with tags: `latest` and commit SHA
 - Only run on the `main` branch
 
@@ -163,11 +191,20 @@ The pipeline will automatically:
 
 This microservice is the foundational component of a larger web application. The next steps are:
 
-- [ ] **Dockerize the Application**: Containerize the service for consistent, isolated deployments.
+- [x] **Dockerize the Application**: Containerize the service for consistent, isolated deployments.
+- [x] **Implement CI/CD Pipeline**: Automated testing and deployment with CircleCI.
+- [x] **Optimize CI/CD**: Implement "build once, deploy same" best practices.
 - [ ] **Deploy to Production**: Deploy to a cloud platform like Render or Railway.
 - [ ] **Integrate with Frontend**: Connect this API to a Next.js and Supabase frontend.
 
 ---
+
+## 🔐 Security Features
+
+- **API Key Authentication**: All endpoints require a valid `Authorization: Bearer <INTERNAL_API_KEY>` header
+- **Environment Variable Management**: Secure handling of API keys and secrets
+- **Input Validation**: Comprehensive URL and parameter validation using Pydantic
+- **Error Handling**: Secure error responses that don't leak sensitive information
 
 ## Technology Stack
 
@@ -175,3 +212,5 @@ This microservice is the foundational component of a larger web application. The
 - **Web Crawling Service**: Firecrawl API
 - **Data Validation**: Pydantic
 - **HTTP Client (for testing)**: Requests
+- **Containerization**: Docker
+- **CI/CD**: CircleCI with Docker Hub integration
