@@ -161,6 +161,7 @@ docker pull sukeshram/llms-txt-generator
 ### Stateless Microservice Architecture
 
 This is a **stateless microservice** designed for horizontal scaling and high availability. The service:
+
 - **No persistent storage**: All data is processed in-memory and returned to clients
 - **No database dependencies**: Eliminates database bottlenecks and maintenance overhead
 - **Stateless design**: Each request is independent and can be handled by any instance
@@ -171,6 +172,7 @@ This is a **stateless microservice** designed for horizontal scaling and high av
 The service is currently deployed on **Render** using the following configuration:
 
 #### **Deployment Settings:**
+
 - **Platform**: Render Web Services
 - **Build Command**: `docker pull sukeshram/llms-txt-generator`
 - **Start Command**: `docker run -p $PORT:8000 sukeshram/llms-txt-generator`
@@ -178,13 +180,15 @@ The service is currently deployed on **Render** using the following configuratio
 - **Auto-deploy**: Enabled (deploys on every push to main branch)
 
 #### **Environment Variables on Render:**
+
 ```env
-FIRECRAWL_API_KEY=fc-d98c413660f346e6bb1f78134eae13b4
-INTERNAL_API_KEY=BopGY8MgN6SXkG7uLZLlrljMrLhtbkHEWv8sdGVINuk
+FIRECRAWL_API_KEY=your_firecrawl_api_key_here
+INTERNAL_API_KEY=your_internal_api_key_here
 PORT=8000
 ```
 
 #### **Deployment Process:**
+
 1. **CI/CD Pipeline**: CircleCI builds and tests the Docker image
 2. **Docker Hub**: Image is pushed to `sukeshram/llms-txt-generator`
 3. **Render**: Automatically pulls the latest image from Docker Hub
