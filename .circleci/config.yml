@@ -8,32 +8,27 @@ orbs:
 jobs:
   build-and-test:
     docker:
-      - image: cimg/python:3.11.7
+      # FIX: Use an image that has Docker pre-installed.
+      - image: cimg/docker:20.10.24-git
     steps:
       - checkout
 
-      # Install Docker
-      - run:
-          name: Install Docker
-          command: |
-            curl -fsSL https://get.docker.com -o get-docker.sh
-            sh get-docker.sh
-            sudo usermod -aG docker $USER
+      # This step is no longer needed because the environment has Docker.
+      # - run:
+      #     name: Install Docker
+      #     ...
 
-      # Login to Docker Hub to avoid rate limiting
       - run:
           name: Login to Docker Hub
           command: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
 
       - run:
           name: Build Docker image
-          command: |
-            docker build -t llms-txt-generator .
+          command: docker build -t llms-txt-generator .
 
       - run:
           name: Test container startup
           command: |
-            mkdir -p test-results
             docker run -d --name test-container -p 8000:8000 -e FIRECRAWL_API_KEY=test_key llms-txt-generator
             sleep 15
             docker ps | grep test-container | grep healthy
@@ -41,15 +36,11 @@ jobs:
             curl -f http://localhost:8000/docs || exit 1
             docker stop test-container
             docker rm test-container
-            echo '{"test": "container_startup", "status": "passed", "duration": 15}' > test-results/container_startup.json
 
       - run:
           name: Run Python tests
-          command: |
-            docker run --rm -e FIRECRAWL_API_KEY=test_key llms-txt-generator python -c "import main; print('Application imports successfully')"
-            echo '{"test": "python_imports", "status": "passed"}' > test-results/python_imports.json
+          command: docker run --rm -e FIRECRAWL_API_KEY=test_key llms-txt-generator python -c "import main; print('Application imports successfully')"
 
-      # Save the tested image to workspace
       - run:
           name: Save Docker image to workspace
           command: |
@@ -60,34 +51,24 @@ jobs:
           paths:
             - image.tar
 
-      # Store test results for Test Insights
-      - store_test_results:
-          path: test-results
-
   deploy:
     docker:
-      - image: cimg/python:3.11.7
+      # FIX: Use an image that has Docker pre-installed.
+      - image: cimg/docker:20.10.24-git
     steps:
       - checkout
-
-      # Attach workspace to access the saved image
       - attach_workspace:
           at: /tmp/workspace
 
-      # Install Docker
-      - run:
-          name: Install Docker
-          command: |
-            curl -fsSL https://get.docker.com -o get-docker.sh
-            sh get-docker.sh
-            sudo usermod -aG docker $USER
+      # This step is no longer needed.
+      # - run:
+      #     name: Install Docker
+      #     ...
 
-      # Login to Docker Hub to avoid rate limiting
       - run:
           name: Login to Docker Hub
           command: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
 
-      # Load and tag the tested image instead of rebuilding
       - run:
           name: Load and tag Docker image
           command: |
