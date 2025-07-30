@@ -1,4 +1,5 @@
 import os
+import warnings
 from typing import Any, Dict, Literal, Optional
 from urllib.parse import urlparse
 
@@ -7,6 +8,11 @@ from fastapi import HTTPException
 from firecrawl.firecrawl import LocationConfig, ScrapeOptions
 from rich.console import Console
 from rich.panel import Panel
+
+# Suppress Pydantic field shadowing warnings from Firecrawl
+warnings.filterwarnings(
+    "ignore", message="Field name.*shadows an attribute in parent.*"
+)
 
 # Global console instance for UI components
 console = Console()
