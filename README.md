@@ -79,9 +79,15 @@ The service is built as a standalone component for a decoupled web stack. The as
     ```
 
 4.  **Set up your environment variables:**
-    Create a file named `.env` in the project root and add your Firecrawl API key:
+    Create a file named `.env` in the project root and add your API keys:
     ```env
     FIRECRAWL_API_KEY="fc-YOUR_API_KEY_HERE"
+    INTERNAL_API_KEY="your-secret-api-key-here"
+    ```
+    
+    **Note**: Generate a secure `INTERNAL_API_KEY` using:
+    ```bash
+    python3 -c 'import secrets; print(secrets.token_urlsafe(32))'
     ```
 
 ### Running the Service
@@ -100,6 +106,21 @@ The service is built as a standalone component for a decoupled web stack. The as
     python client.py https://docs.firecrawl.dev/
     ```
 
+3.  **Test API Security:**
+    Verify that the API authentication is working correctly:
+    ```bash
+    # Test without API key (should fail)
+    curl -X POST "http://127.0.0.1:8000/generate-llms-txt" \
+      -H "Content-Type: application/json" \
+      -d '{"url": "https://example.com"}'
+    
+    # Test with correct API key (should succeed)
+    curl -X POST "http://127.0.0.1:8000/generate-llms-txt" \
+      -H "Authorization: Bearer YOUR_INTERNAL_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{"url": "https://example.com"}'
+    ```
+
 ## 🐳 Docker Deployment
 
 ### Local Docker Usage
@@ -113,7 +134,7 @@ The service is built as a standalone component for a decoupled web stack. The as
 2. **Run the container:**
 
    ```bash
-   docker run -p 8000:8000 -e FIRECRAWL_API_KEY=your_api_key_here llms-txt-generator
+   docker run -p 8000:8000 -e FIRECRAWL_API_KEY=your_api_key_here -e INTERNAL_API_KEY=your_secret_key_here llms-txt-generator
    ```
 
 3. **Or use an environment file:**
@@ -187,6 +208,32 @@ The pipeline will automatically:
 
 ---
 
+## 🌐 Live API
+
+The service is now **live and ready for production use**!
+
+### Production Endpoint
+- **API URL**: https://llms-txt-crawler-api.onrender.com
+- **Status**: ✅ Live and operational
+- **Documentation**: https://llms-txt-crawler-api.onrender.com/docs
+
+### Using the Production API
+
+1. **With the Python Client:**
+   ```bash
+   python client.py https://example.com
+   ```
+   The client automatically connects to the production API.
+
+2. **Direct API Calls:**
+   ```bash
+   # Start a crawl job
+   curl -X POST "https://llms-txt-crawler-api.onrender.com/generate-llms-txt" \
+     -H "Authorization: Bearer YOUR_INTERNAL_API_KEY" \
+     -H "Content-Type: application/json" \
+     -d '{"url": "https://example.com"}'
+   ```
+
 ## 🛣️ Project Roadmap
 
 This microservice is the foundational component of a larger web application. The next steps are:
@@ -194,7 +241,7 @@ This microservice is the foundational component of a larger web application. The
 - [x] **Dockerize the Application**: Containerize the service for consistent, isolated deployments.
 - [x] **Implement CI/CD Pipeline**: Automated testing and deployment with CircleCI.
 - [x] **Optimize CI/CD**: Implement "build once, deploy same" best practices.
-- [ ] **Deploy to Production**: Deploy to a cloud platform like Render or Railway.
+- [x] **Deploy to Production**: Deploy to Render cloud platform.
 - [ ] **Integrate with Frontend**: Connect this API to a Next.js and Supabase frontend.
 
 ---
