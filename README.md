@@ -13,13 +13,15 @@ A production-ready microservice for generating structured `llms.txt` files from 
 
 ## Core Features ✨
 
+- **Stateless Architecture**: Designed as a stateless microservice with no persistent storage or database dependencies. Each request is independent and can be handled by any instance, enabling horizontal scaling and high availability.
+
 - **Asynchronous Job Processing**: Initiate crawls instantly and poll for results via a `job_id`. This non-blocking design ensures a fast UI/client experience, even when crawling large websites.
 
 - **Intelligent Structuring**: Automatically groups discovered pages by URL path (e.g., `/blog`, `/docs`) and applies language filtering to produce a clean, semantically organized `llms.txt` file, a significant improvement over simple link lists.
 
-- **Data Persistence & Refresh Logic**: Caches completed crawl results to a local data store and provides an endpoint to trigger re-crawls for stale data (defaulting to 7 days), ensuring content can be kept fresh.
+- **Production-Ready Security**: API key authentication, input validation, and secure error handling. All endpoints are protected except for health checks and documentation.
 
-- **Modular & Production-Ready**: Cleanly organized into a core application (`main.py`) and helper modules (`helpers.py`), following modern Python best practices for maintainability and testing.
+- **Modular & Maintainable**: Cleanly organized into a core application (`main.py`) and helper modules (`helpers.py`), following modern Python best practices for maintainability and testing.
 
 ---
 
@@ -156,22 +158,48 @@ docker pull sukeshram/llms-txt-generator
 
 ## 🚀 Production Deployment
 
-### Ready for Cloud Deployment
+### Stateless Microservice Architecture
 
-This service is now ready for production deployment on cloud platforms like **Render**, **Railway**, or **Heroku**. The Docker image is automatically built, tested, and pushed to Docker Hub via CI/CD.
+This is a **stateless microservice** designed for horizontal scaling and high availability. The service:
+- **No persistent storage**: All data is processed in-memory and returned to clients
+- **No database dependencies**: Eliminates database bottlenecks and maintenance overhead
+- **Stateless design**: Each request is independent and can be handled by any instance
+- **Horizontal scaling**: Can be easily scaled across multiple instances for high traffic
 
-### Environment Variables for Production
+### Render Deployment
 
-When deploying to production, ensure these environment variables are set:
+The service is currently deployed on **Render** using the following configuration:
 
-- `FIRECRAWL_API_KEY`: Your Firecrawl API key
-- `INTERNAL_API_KEY`: A secret key for API authentication
+#### **Deployment Settings:**
+- **Platform**: Render Web Services
+- **Build Command**: `docker pull sukeshram/llms-txt-generator`
+- **Start Command**: `docker run -p $PORT:8000 sukeshram/llms-txt-generator`
+- **Environment**: Docker container with Python 3.11
+- **Auto-deploy**: Enabled (deploys on every push to main branch)
 
-### Deployment Platforms
+#### **Environment Variables on Render:**
+```env
+FIRECRAWL_API_KEY=fc-d98c413660f346e6bb1f78134eae13b4
+INTERNAL_API_KEY=BopGY8MgN6SXkG7uLZLlrljMrLhtbkHEWv8sdGVINuk
+PORT=8000
+```
 
-- **Render**: Use the Docker image from Docker Hub
+#### **Deployment Process:**
+1. **CI/CD Pipeline**: CircleCI builds and tests the Docker image
+2. **Docker Hub**: Image is pushed to `sukeshram/llms-txt-generator`
+3. **Render**: Automatically pulls the latest image from Docker Hub
+4. **Health Checks**: Render monitors the service at `/test-connection`
+5. **Auto-scaling**: Render can scale instances based on traffic
+
+### Alternative Deployment Platforms
+
+The stateless design makes this service compatible with any container platform:
+
 - **Railway**: Direct GitHub integration with automatic deployments
 - **Heroku**: Container deployment with the Docker image
+- **AWS ECS**: Container orchestration with auto-scaling
+- **Google Cloud Run**: Serverless container platform
+- **Azure Container Instances**: Managed container service
 
 ## 🔄 CI/CD with CircleCI
 
@@ -236,8 +264,6 @@ The service is now **live and ready for production use**!
      -H "Content-Type: application/json" \
      -d '{"url": "https://example.com"}'
    ```
-
-
 
 ---
 
