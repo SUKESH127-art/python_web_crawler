@@ -24,6 +24,7 @@ jobs:
       - run:
           name: Test container startup
           command: |
+            mkdir -p test-results
             docker run -d --name test-container -p 8000:8000 -e FIRECRAWL_API_KEY=test_key llms-txt-generator
             sleep 15
             docker ps | grep test-container | grep healthy
@@ -31,11 +32,13 @@ jobs:
             curl -f http://localhost:8000/docs || exit 1
             docker stop test-container
             docker rm test-container
+            echo '{"test": "container_startup", "status": "passed", "duration": 15}' > test-results/container_startup.json
 
       - run:
           name: Run Python tests
           command: |
             docker run --rm -e FIRECRAWL_API_KEY=test_key llms-txt-generator python -c "import main; print('Application imports successfully')"
+            echo '{"test": "python_imports", "status": "passed"}' > test-results/python_imports.json
 
       # Save the tested image to workspace
       - run:
@@ -47,6 +50,10 @@ jobs:
           root: workspace
           paths:
             - image.tar
+
+      # Store test results for Test Insights
+      - store_test_results:
+          path: test-results
 
   deploy:
     docker:
