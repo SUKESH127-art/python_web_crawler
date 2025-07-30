@@ -1,3 +1,4 @@
+import os
 import sys
 import time
 
@@ -8,6 +9,7 @@ from rich.text import Text
 from helpers import (
     build_status_url,
     console,
+    create_error_panel,
     create_info_panel,
     create_success_panel,
     extract_job_data,
@@ -17,8 +19,17 @@ from helpers import (
 
 
 def run_job(url: str):
-    """Starts a crawl job and polls for the result."""
+    """Starts a crawl job, sends the API key, and polls for the result."""
     base_url = get_base_url()
+
+    # --- NEW: Read the internal API key from the environment ---
+    internal_api_key = os.getenv("INTERNAL_API_KEY")
+    if not internal_api_key:
+        console.print(create_error_panel("INTERNAL_API_KEY not found in .env file.", "Configuration Error"))
+        return
+
+    headers = {"Authorization": f"Bearer {internal_api_key}"}
+    # --- END NEW ---
 
     console.print(
         create_info_panel(f"🚀 Starting crawl for: {url}", "Step 1: Initiate Crawl")
@@ -26,8 +37,10 @@ def run_job(url: str):
 
     # --- Start the Crawl Job ---
     try:
+        # Add the 'headers' dictionary to the POST request
         response = requests.post(
             f"{base_url}/generate-llms-txt",
+            headers=headers,
             json={"url": url},
             timeout=10,  # Timeout for the initial request
         )
@@ -56,7 +69,8 @@ def run_job(url: str):
     with console.status(spinner) as status:
         while True:
             try:
-                poll_response = requests.get(status_url, timeout=30)
+                # Add the 'headers' dictionary to the GET request
+                poll_response = requests.get(status_url, headers=headers, timeout=30)
 
                 # If the status is 202, the job is still processing
                 if poll_response.status_code == 202:
