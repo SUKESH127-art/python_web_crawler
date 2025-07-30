@@ -3,17 +3,17 @@ from typing import Optional
 from urllib.parse import urlparse
 
 import uvicorn
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.responses import PlainTextResponse
 from firecrawl import FirecrawlApp
 from pydantic import BaseModel, HttpUrl, field_validator
 
 from helpers import (
     build_scrape_options,
+    get_api_key,
     handle_crawl_exception,
     load_environment_config,
     validate_url_scheme,
-    get_api_key,
 )
 
 app = FastAPI(
