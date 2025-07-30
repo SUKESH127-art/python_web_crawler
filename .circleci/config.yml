@@ -8,9 +8,8 @@ orbs:
 
 jobs:
   build-and-test:
-    # FIX: Use the 'docker/default' executor provided by the orb.
-    # This guarantees a stable environment with the Docker client available.
-    executor: docker/default
+    docker:
+      - image: cimg/docker:20.10.24-git
     steps:
       - checkout
       - run:
@@ -43,8 +42,8 @@ jobs:
             - image.tar
 
   deploy:
-    # FIX: Use the 'docker/default' executor here as well.
-    executor: docker/default
+    docker:
+      - image: cimg/docker:20.10.24-git
     steps:
       - checkout
       - attach_workspace:
