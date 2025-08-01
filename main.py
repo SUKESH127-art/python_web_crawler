@@ -1,8 +1,9 @@
 from collections import defaultdict
 from typing import Optional
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 
 import uvicorn
+import requests
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.responses import PlainTextResponse
 from firecrawl import FirecrawlApp
@@ -159,6 +160,24 @@ async def generate_llms_txt(request: CrawlRequest, api_key: str = Depends(get_ap
     limit = request.limit or 20
 
     print(f"Starting crawl for: {target_url} with limit: {limit}")
+    
+    # Construct the URL for the llms.txt file
+    llms_txt_url = urljoin(target_url, '/llms.txt')
+    print(f"Checking for existing llms.txt at: {llms_txt_url}")
+    try:
+        # Make a request to see if the file exists
+        response = requests.get(llms_txt_url, timeout=5)
+        # If the request is successful (status code 200), the file exists.
+        if response.status_code == 200:
+            print("Found existing llms.txt file. Returning its content directly.")
+            # We return the content directly, but we don't have a job_id to save.
+            # This is a synchronous response.
+            return PlainTextResponse(content=response.text)
+        else:
+            print(f"No llms.txt file found (Status: {response.status_code}). Proceeding with crawl.")
+    except requests.exceptions.RequestException as e:
+        print(f"Error checking for llms.txt: {e}. Proceeding with crawl.")
+
 
     try:
         return perform_crawl(target_url, limit)
